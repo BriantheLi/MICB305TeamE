@@ -11,9 +11,10 @@ Alcohol dataset:
 -Remove the species
 -Maybe separate based on gender or not
 -Classify based on age??? as we know that age can affect our gut microbiome
+-Smoking as a confounding factor? 
 IBD dataset:
 Wrangling of variables, which ones could be clinically relevant?
--Smoking - very briefly mentioned in the paper regarding epigenetic effects - carcinogen maybe?
+-Smoking - very briefly mentioned in the paper regarding epigenetic effects - carcinogen maybe? It is mentioned in both datasets so it should be seriously considered
 -Any idea on what the merge column means in the dataset?
 -Biopsy location
 -The data appears to be sometimes have been taken in pairs and sometimes not...
