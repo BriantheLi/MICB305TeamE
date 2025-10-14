@@ -40,3 +40,32 @@ https://www.frontiersin.org/journals/behavioral-neuroscience/articles/10.3389/fn
 https://onlinelibrary.wiley.com/share/YCGNFRIG5IAPXQPUKDJB?target=10.1111/j.1751-2980.2011.00480.x (Additional paper that the above article cited)
 
 Summary of today meeting:
+Use the picrust_2 to analyze the function of the organisms based on the 16s.
+proposal up to rarefaction curve and mainly identify the gap in the research and how our methodology answer the gap.
+Be specific as possible how each functions of analysis helps us answer the gap of our research or function of the organisms.
+Have a past research paper to backup your point. Don't go on random discussion.
+
+This week should get the metadata
+
+Alcohol dataset: -p8
+-Age (keep them separate)
+-Gender (keep them separate)
+-Alcohol per gram per day
+-Might be fine to keep the species column
+If the split is bad, like one confounding factor is more favoured, then we need to do some data wrangling.
+
+IBD dataset:
+-Healthy acts as a control for alcohol and IDB.
+
+
+Compare the functional organisms between the IBD and alcohol consumption people
+We should age and gender match
+Find the group with the biggest samples between age and gender and use this to answer our research gap.
+Add an extra column classifying the patient status, called status -> final step
+Try to maximize the numbers of samples
+We can put smoking as a limitation if the smoking status minimize our samples in our research paper
+Count the number of smoker and non-smoker
+Choose a biopsies location for IBD
+Start the research review papers
+Use specific functions for specific analysis; don't need to use all functions
+How does these analysis answer the gap
