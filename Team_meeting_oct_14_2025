@@ -61,11 +61,13 @@ IBD dataset:
 Compare the functional organisms between the IBD and alcohol consumption people
 We should age and gender match
 Find the group with the biggest samples between age and gender and use this to answer our research gap.
-Add an extra column classifying the patient status, called status -> final step
+Add an extra column classifying the patient status, called status -> final step - IBD patients vs ppl who consume a lot of alcohol
 Try to maximize the numbers of samples
 We can put smoking as a limitation if the smoking status minimize our samples in our research paper
 Count the number of smoker and non-smoker
-Choose a biopsies location for IBD
+Choose a biopsies location for IBD - unless its not specified in alcohol we can qiime match with ibd
 Start the research review papers
 Use specific functions for specific analysis; don't need to use all functions
 How does these analysis answer the gap
+2 ppl work on literature review and 1 on data simultaneously as intro and aim are interconnected
+why the question is important and needs to be backed up by literature
