@@ -1,1 +1,71 @@
+Title 
 
+Team E: 
+
+
+Introduction and Background
+Background Knowledge
+Importance of research into this subject - potential applications 
+Knowledge gap/limitation
+A lot of papers look at microbes and functional data within digestive tracts, but tend to focus more on the physical functions of the digestive systems themselves rather than the microbiome functions
+How we will address the knowledge gap
+Hypothesis: 
+
+
+Research question:
+What are the microbial functional differences between IBD patients and people who drink high amounts of alcohol?
+How does the gut microbiome’s functional composition change when comparing IBD patients with people who drink alcohol
+Choose alcohol because it also affects gut microbiome but we haven’t yet known how significant the differences are compared to those who have IBD.
+Picrust pipeline → pull functional classifications, and compare IBD to alcohol
+Age (Both data)
+Gender (Both)
+Alcohol consumption per gram per day
+Filter the site of specimen/biosp (IBD)
+Filter medication (IBD)
+Non-smoker (if we have enough samples, IBD)
+Keep all inflammatory tissue and non-inflammatory tissue
+From IBD set: healthy serves as control for both IBD and alcohol
+From alcohol set: Low alcohol consumption can also work as a control functional group
+Low alcohol consumption 
+
+Experimental Aims and Rationale
+
+Proposed Approach (layout of what we will be doing throughout the term to achieve the aims - we should also include a timeline for achievements of each stage of the project. Like data wrangling, data analysis, etc.)
+
+
+
+Coding:
+Pull the both metadata
+Keep the column names for the IBD set (the same as in Canvas)
+Filter the site of specimen/biopsy (IBD) (Keep on the right colon and right colon undefined)
+Filter medication (IBD- No medication) (If not enough, all medications in)
+Non-smoker (if we have enough samples, IBD)
+Run DADA2 (For both data separately)
+Run the quality plot (For both data separately)
+Rarefaction depth (For both data separately)
+Remove the species column for the alcohol
+Create a new column for alcohol:
+For women: Consuming 25 grams or more of alcohol per day. 
+For men: Consuming 45 grams or more of alcohol per day.
+Create a new column for age:
+Greater or equal than 60: Seniors
+Equal 20- not equal 60: adult
+Less than 20: Child (not found in IBD set)
+Combine both data (Fill the column with no value with NA like alcohol consumption, in other words, values from the other datasets that are not in the original one) 
+
+
+Methods/Tools used (list here and where did you use them?)
+Sequencing depth:
+Sampling depth:
+Qiime data analysis:
+Beta
+Picrust because we want to know functions of organisms based on 16S
+Randomforest
+
+Literature review (articles + links)
+Find papers on microbes and functional data within digestive tracts, but tend to focus more on the physical functions of the digestive systems themselves rather than the microbiome functions. Physical functions of digestive systems in IBD patients and those consuming alcohol
+
+For definition for our high alcohol consumption
+https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2802963 
+For low alcohol concentration: https://pmc.ncbi.nlm.nih.gov/articles/PMC7020057/
+Gut microbiome significant differences between age groups: https://pmc.ncbi.nlm.nih.gov/articles/PMC11087091/
