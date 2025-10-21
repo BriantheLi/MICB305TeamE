@@ -69,3 +69,13 @@ For definition for our high alcohol consumption
 https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2802963 
 For low alcohol concentration: https://pmc.ncbi.nlm.nih.gov/articles/PMC7020057/
 Gut microbiome significant differences between age groups: https://pmc.ncbi.nlm.nih.gov/articles/PMC11087091/
+
+For ryan data:
+ryan_ibd_data_filtered = ryan_ibd_data |>
+  filter(Biopsy_location == "Right colon" | Biopsy_location == "Right colon undefined") |>
+  filter(Medications == 'No')
+this one has 37 samples: 22 male and 15 female
+
+ryan_ibd_data_filtered = ryan_ibd_data |>
+  filter(Medications == 'No')
+this one has 78 samples but no specific biopsy location: 44 males and 38 females
