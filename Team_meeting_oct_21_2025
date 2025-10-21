@@ -89,5 +89,13 @@ ryan_ibd_data_filtered = ryan_ibd_data |>
   filter(Biopsy_location == "Right colon" | Biopsy_location == "Right colon undefined")
 This one has 137 samples but no smoking and medicine status: 76 males and 61 females.
 
+ryan_ibd_data_filtered = ryan_ibd_data |>
+  filter(Biopsy_location == "Right colon" | Biopsy_location == "Right colon undefined") |>
+  filter(Smoking.status == 'Non-smoker') |>
+  filter(Medications == 'No' | Medications == "")
+47 samples: 27 Males and 20 Females
+We would go with this one.
+
 For alcohol:
 Most of the samples are in low comsumpsution of alcohol.
+Remove one row of data since it is missing gender, alcohol, and age.
