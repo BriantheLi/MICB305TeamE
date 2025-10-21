@@ -106,6 +106,40 @@ ryan_ibd_data_filtered = ryan_ibd_data |>
 47 samples: 27 Males and 20 Females
 We would go with this one.
 
+# Meeting Minutes Oct-21-2025
+
+IBD vs Alcohol - Gap isn’t that people haven’t done functional assays on the microbiome
+- Bigger potential gap: 
+    - Whether there are similarities between the microbiome of people with IBD and people with alcoholism
+    - Could be a valid comparison
+    - No has ever asked the question and if that’s a valid question
+        - Look into diversity —> changes in diversity in alcohol drinkers vs IBD patients
+            - Functional analysis : probably want to see inflammatory pathways in the picrust pathways
+        - “Why IBD vs alcoholism, why the microbiome, why looking at both for would be impactful”
+
+Justify novelty - (actually, justify everything)
+People with alcoholism treatments for inflammatory bowel vs. People with IBD - gaps in treatment and insufficient information 
+(Provided if they have the same microbiome)
+
+- Formatting figures: put figure legend under the figure
+- Tables: put the title on top of the table
+- Cite all the data analysis methods that we used
+
+- Sample size > 10 is good enough
+- Could combine the negative control groups into just “Healthy”
+
+
+Proposal checklist
+- Do we plan to use every sample in the analysis? Yes/no
+    - Filtering on samples was already done before qiime processing steps based on confounding variables
+    - If we filter samples based on poor quality and low reads we should also include that there
+
+
+Qiime Manifest and Metadata combination 
+- Be prepared to lose some samples because we already filtered the metadata for confounding variables
+- After DADA2 we may lose more.
+
+
 For alcohol:
 Most of the samples are in low comsumpsution of alcohol.
 Remove one row of data since it is missing gender, alcohol, and age.
