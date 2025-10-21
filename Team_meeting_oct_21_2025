@@ -74,8 +74,20 @@ For ryan data:
 ryan_ibd_data_filtered = ryan_ibd_data |>
   filter(Biopsy_location == "Right colon" | Biopsy_location == "Right colon undefined") |>
   filter(Medications == 'No')
-this one has 37 samples: 22 male and 15 female
+This one has 37 samples but no smoking status: 22 male and 15 female
 
 ryan_ibd_data_filtered = ryan_ibd_data |>
   filter(Medications == 'No')
-this one has 78 samples but no specific biopsy location: 44 males and 38 females
+this one has 78 samples but no specific biopsy location and smoking status: 44 males and 38 females
+
+ryan_ibd_data_filtered = ryan_ibd_data |>
+  filter(Medications == 'No') |>
+  filter(Smoking.status == 'Non-smoker')
+This one has 66 samples but no specific biopsy location: 42 males and 24 females
+
+ryan_ibd_data_filtered = ryan_ibd_data |>
+  filter(Biopsy_location == "Right colon" | Biopsy_location == "Right colon undefined")
+This one has 137 samples but no smoking and medicine status: 76 males and 61 females.
+
+For alcohol:
+Most of the samples are in low comsumpsution of alcohol.
