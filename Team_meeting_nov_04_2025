@@ -1,2 +1,14 @@
 Limitation: 
 1 fecal and 1 biopsy; only one female in the high alcohol consumption level.
+Picrust pipeline → pull functional classifications, and compare IBD to alcohol
+Beta-diversity analysis
+Age (Both data)
+Gender (Both)
+Alcohol consumption per gram per day
+Filter medication (IBD)
+Non-smoker (if we have enough samples, IBD)
+Keep all inflammatory tissue and non-inflammatory tissue
+Only considered health patients in IBD as our control
+From IBD set: healthy serves as control for both IBD and alcohol (separate based on genders and age groups)
+
+Proposed Approach (layout of what we will be doing throughout the term to achieve the aims - we should also include a timeline for achievements of each stage of the project. Like data wrangling, data analysis, etc.)
