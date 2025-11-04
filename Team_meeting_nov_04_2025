@@ -12,3 +12,6 @@ Only considered health patients in IBD as our control
 From IBD set: healthy serves as control for both IBD and alcohol (separate based on genders and age groups)
 
 Proposed Approach (layout of what we will be doing throughout the term to achieve the aims - we should also include a timeline for achievements of each stage of the project. Like data wrangling, data analysis, etc.)
+
+Look into merging of both 16S sequences - different lengths between two datasets but we want to somehow do a phylogenetic comparison - doable even with different lengths between the sets?
+Datasets are 16S V3-V4 rRNA sequence locations as well - is it possible to do a beta comparison with phylogeny factored in then?
