@@ -15,3 +15,34 @@ Proposed Approach (layout of what we will be doing throughout the term to achiev
 
 Look into merging of both 16S sequences - different lengths between two datasets but we want to somehow do a phylogenetic comparison - doable even with different lengths between the sets?
 Datasets are 16S V3-V4 rRNA sequence locations as well - is it possible to do a beta comparison with phylogeny factored in then?
+
+
+Meeting Minutes Nov-4-2025
+- 16S rRNA V3-V4 genome data can be merged (hopefully without issue)
+    - Data should match up hopefully even if the nucleotides are different lengths between datasets
+    - Should still trim to one of the datasets’ parameters for consistency —> whichever is more important maybe??
+
+- List limitations just in discussion or “limitations” section of the manuscript when we fully write it - should compile all limitations somewhere or on just Github
+
+- Proposal introduction vs manuscript introduction
+    - Manuscript should be answering the research question by the stage of research conclusion
+    - Already know the findings 
+    - Final paragraph should flow within the intro
+
+- Further data wrangling = column denoting which points are from which dataset
+
+- Splitting IBD groups —> could split up UC and CD if they are significantly different from each other and compare both groups to high alcohol intake patients
+    - Run beta diversity analyses for UC and CD vs alcohol
+        - If beta diversity is same - pick the shared bacterial groups for piecrust
+            - See what common pathways both alcohol and (IBD condition) work under
+        - If diversity is different - pick the odd ones out for piecrust functional analysis
+            - See what pathway is unique and how else the disease can be treated that is not similar to the conditions 
+
+- Analyses that we need to do:
+    - Beta analysis —> Picrust 
+    - Abundance
+
+- Manuscript deadline is December 14 —> final manuscript will be marked based on how well we improve based on feedback asw
+
+- Future directions: 
+    - Sampling locations paired in patients processing based pairwise and inspecting the microbiomes within the subject based on sampling location
