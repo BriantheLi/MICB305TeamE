@@ -5,3 +5,28 @@ How does this effect our other potential research aims?
 Which groups to select for picrust functional analysis and what are we looking for in terms of functions? Shared or different aspects?
 
 Split IBD groups to see significance?
+
+Meeting Minutes Nov-18-2025
+Beta diversity plots generated - different datasets appear to be a confounding factor - datasets tended to cluster together
+- Need to separate datasets and process them in parallel and compare differences maybe?
+- Rephrase - for example: from comparing both directly —> compare both to their respective healthy controls == compare trends within the datasets —> won’t be directly comparing IBD and alcohol
+- Compare different trends between datasets
+    - Should compare pathways between the two datasets when looking at their functional comparisons
+- Contain calculations within the datasets
+
+- What to do going forward - do alpha & beta diversity
+    - Separate the Phyloseq
+    - Unweighted unifrac, Shannon’s - whatever we deem necessary
+    - Recreate for both
+    - Alcohol - compare between healthy and alcohol consuming groups
+    - IBD - compare CD and UC and Healthy - does IBD itself have an effect
+    - See if they have independent effects - look at certain shared taxa between groups
+        - Run and indicator taxa analysis SEPARATELY FOR THE DATASETS and see which are the SAME
+    - Easier to do in R
+
+- PiCRUST for both datasets as well
+    - Alcohol to control
+    - IBD healthy to CD and UC —> we want to compare healthy to each IBD separately —> look overall for the general trend
+- Discussion the similarities and differences —> see again on overall trend
+
+- Justify separating CD and UC and not keeping them in IBD
