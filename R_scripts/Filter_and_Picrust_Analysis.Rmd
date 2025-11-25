@@ -1,0 +1,160 @@
+---
+title: "Filtering and picrust out"
+output: html_document
+date: "2025-11-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r library}
+library(tidyverse)
+library(ggpicrust2)
+library(DESeq2)
+```
+
+
+```{r filtering and saving new filtered datsets}
+# Alcohol
+alc_original = read.delim("../Datasets/p8_metadata.txt",  header = TRUE)
+alc_no_species = alc_original %>%
+  select(-Host)
+
+alc_no_species$alcohol_intake_status = ifelse(
+  (alc_no_species$host_sex == "female" & alc_no_species$GramPerday >= 25) |
+    (alc_no_species$host_sex == "male" & alc_no_species$GramPerday >= 45),
+  "High", "Low")
+
+alc_no_species$age_group = ifelse(
+  alc_no_species$Host_age >= 60, "Senior",
+  ifelse(alc_no_species$Host_age >= 20 & alc_no_species$Host_age < 60, "Adult", "Child")
+)
+alc_grouped = alc_no_species
+alc_removed_row_5 = alc_grouped[-5, ]
+alc_removed_row_5$GramPerday = as.numeric(alc_removed_row_5$GramPerday)
+alc_removed_row_5$Host_age = as.numeric(alc_removed_row_5$Host_age)
+alc_fixed = alc_removed_row_5
+
+alc = alc_fixed |>
+  filter(alcohol_intake_status == 'Low')
+# IBD dataset
+ryan_ibd_data = read.delim('../Datasets/ryan_metadata.tsv', header = TRUE)
+ryan_ibd_data_filtered = ryan_ibd_data |>
+  filter(Smoking.status == 'Non-smoker') |>
+  filter(Medications == 'No' | Medications == "") |>
+  filter(Age_when_sampled != "Uncertain")
+
+ryan_ibd_data_filtered$Medications = ifelse(
+  ryan_ibd_data_filtered$Medications == "",  # test for empty string
+  "No",                                       # value if TRUE
+  ryan_ibd_data_filtered$Medications         # value if FALSE
+)
+
+# join the filtered datasets with the manifest datasets
+library(dplyr)
+# Alcohol
+# Make sure both are data frames
+alc_fixed = as.data.frame(alc_fixed)
+p8_manifest = read.table("../Datasets/p8_manifest.tsv", header = TRUE, sep = "\t")
+alc_merged_data = left_join(alc_fixed, p8_manifest, by = "sample.id")  # replace "sample.id"
+
+# IBD
+ryan_ibd_data_filtered = as.data.frame(ryan_ibd_data_filtered)
+ryan_manifest = read.table("../Datasets/ryan_manifest.tsv", header = TRUE, sep = "\t")
+ryan_ibd_merged_data = left_join(ryan_ibd_data_filtered, ryan_manifest, by = "sample.id")
+
+# saving datasets into tsv format
+# alcohol
+write.table(
+  alc_merged_data,                # your merged data frame
+  file = "../Datasets/alc_merged_data.tsv",   # output file name
+  sep = "\t",                 # tab-separated
+  row.names = FALSE,          # don’t write row numbers
+  quote = FALSE               # don’t quote strings unless needed
+)
+# IBD
+write.table(
+  ryan_ibd_merged_data,                # your merged data frame
+  file = "../Datasets/ryan_ibd_merged_data.tsv",   # output file name
+  sep = "\t",                 # tab-separated
+  row.names = FALSE,          # don’t write row numbers
+  quote = FALSE               # don’t quote strings unless needed
+)
+```
+
+```{r Data loading}
+pathways_alcohol = read.delim("../Datasets/p8alcohol_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
+
+pathways_ibd = read.delim("../Datasets/ryan_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
+
+```
+
+```{r}
+# Alcohol
+alcohol_daa_results_df = pathway_daa(abundance = pathways_alcohol,
+                              metadata = alc_merged_data,
+                              group = "alcohol_intake_status",
+                              daa_method = "DESeq2",
+                              select = NULL, reference = NULL)
+
+alcohol_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
+                                               daa_results_df = alcohol_daa_results_df)
+
+# IBD
+ibd_daa_results_df = pathway_daa(abundance = pathways_ibd,
+                              metadata = ryan_ibd_merged_data,
+                              group = "Condition",
+                              daa_method = "DESeq2",
+                              select = NULL, reference = NULL)
+
+ibd_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
+                                               daa_results_df = ibd_daa_results_df)
+```
+
+```{r}
+source('ggpicrust2_errorbar_function_fixed.R')
+
+
+alcohol_daa_annotated_results_df %>% filter(p_values < 0.05) %>% nrow()
+
+alcohol_peb = pathway_errorbar_fixed(abundance = pathways_alcohol, 
+                     daa_results_df = alcohol_daa_annotated_results_df, 
+                     Group = alc_merged_data$alcohol_intake_status, 
+                     wrap_label = T, wraplength=60,
+                     fc_cutoff = 0, order_by_log = F,
+                     p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
+                     ko_to_kegg = FALSE, 
+                     p_value_bar = TRUE, 
+                     x_lab = "description")
+
+alcohol_peb
+
+# ggsave("Assignment 6 - KEGG Error Bar Fixed.png",
+       # plot = peb, width = 18, height = 10)
+```
+
+```{r}
+source('ggpicrust2_errorbar_function_fixed.R')
+
+ibd_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
+
+ibd_peb = pathway_errorbar_fixed(abundance = pathways_ibd, 
+                     daa_results_df = ibd_daa_annotated_results_df,
+                     Group = ryan_ibd_merged_data$Condition,
+                     wrap_label = T, wraplength=60,
+                     fc_cutoff = 0, order_by_log = F,
+                     p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
+                     ko_to_kegg = FALSE, 
+                     p_value_bar = TRUE, 
+                     x_lab = "description")
+
+ibd_peb
+```
+
