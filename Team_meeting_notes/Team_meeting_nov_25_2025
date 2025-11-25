@@ -1,2 +1,26 @@
 I have no question from Billy
 We'll wait until Brian showed Dr. Sun and Dr. Avril the graphs/plots then see how we can proceed
+
+alcohol cohort:
+- faith: not significant 
+- evenness: not significant
+- only 5 low samples for bray-curtis
+- unweighted: no clustering
+
+IBD cohort:
+- bray-Curtis: clusters - does have effect
+- evenness - non-significant
+- colon may have more diverse microbiomes than small intestine
++ crohn has more profile, 
+- beta diversity has no significance
+
+core microbiome 
+- 3 way comparison
+- 2 way picrust
+
+Figure 1. panel A. alpha diversity Shannon alcohol vs non-alcohol
+panel B. alpha Shannon ibd vs healthy (IBD sep into UC and CD)
+panel C: jaccard alcohol
+panel D. jaccard for IBD
+need to do statistical tests to ensure they're significant (PERMANOVA)
+figure 2: venn diagram - core microbiome
