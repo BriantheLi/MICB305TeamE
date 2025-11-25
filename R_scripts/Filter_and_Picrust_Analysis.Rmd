@@ -14,15 +14,17 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r library}
+```{r library loading}
 library(tidyverse)
+library(dplyr)
 library(ggpicrust2)
 library(DESeq2)
+library(GGally)
 ```
 
 
 ```{r filtering and saving new filtered datsets}
-# Alcohol
+# Alcohol dataset
 alc_original = read.delim("../Datasets/p8_metadata.txt",  header = TRUE)
 alc_no_species = alc_original %>%
   select(-Host)
@@ -58,7 +60,6 @@ ryan_ibd_data_filtered$Medications = ifelse(
 )
 
 # join the filtered datasets with the manifest datasets
-library(dplyr)
 # Alcohol
 # Make sure both are data frames
 alc_fixed = as.data.frame(alc_fixed)
@@ -69,6 +70,9 @@ alc_merged_data = left_join(alc_fixed, p8_manifest, by = "sample.id")  # replace
 ryan_ibd_data_filtered = as.data.frame(ryan_ibd_data_filtered)
 ryan_manifest = read.table("../Datasets/ryan_manifest.tsv", header = TRUE, sep = "\t")
 ryan_ibd_merged_data = left_join(ryan_ibd_data_filtered, ryan_manifest, by = "sample.id")
+
+# Combine both IBD conditions into IBD and leave in the same column Condition (Only IBD vs Healthy) for PICRUST only
+
 
 # saving datasets into tsv format
 # alcohol
@@ -89,7 +93,7 @@ write.table(
 )
 ```
 
-```{r Data loading}
+```{r pathways datasets loading}
 pathways_alcohol = read.delim("../Datasets/p8alcohol_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
 
 pathways_ibd = read.delim("../Datasets/ryan_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
@@ -118,11 +122,11 @@ ibd_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
                                                daa_results_df = ibd_daa_results_df)
 ```
 
-```{r}
+```{r plotting}
 source('ggpicrust2_errorbar_function_fixed.R')
 
 
-alcohol_daa_annotated_results_df %>% filter(p_values < 0.05) %>% nrow()
+alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
 
 alcohol_peb = pathway_errorbar_fixed(abundance = pathways_alcohol, 
                      daa_results_df = alcohol_daa_annotated_results_df, 
@@ -140,7 +144,8 @@ alcohol_peb
        # plot = peb, width = 18, height = 10)
 ```
 
-```{r}
+```{r plotting}
+# Figure 3 Using the special dataset
 source('ggpicrust2_errorbar_function_fixed.R')
 
 ibd_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
@@ -149,12 +154,45 @@ ibd_peb = pathway_errorbar_fixed(abundance = pathways_ibd,
                      daa_results_df = ibd_daa_annotated_results_df,
                      Group = ryan_ibd_merged_data$Condition,
                      wrap_label = T, wraplength=60,
-                     fc_cutoff = 0, order_by_log = F,
+                     fc_cutoff = 0.2, order_by_log = F,
                      p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
                      ko_to_kegg = FALSE, 
                      p_value_bar = TRUE, 
                      x_lab = "description")
 
 ibd_peb
+```
+
+```{r core microbiome}
+# Using the uncombined IBD dataset
+# Figure 2
+# Alcohol
+
+
+
+
+# IBD
+
+
+
+```
+
+```{r Alpha diversity plot}
+# Using the uncombined IBD dataset
+# Figure 1
+# Alcohol
+
+# IBD 
+
+```
+
+```{r Beta }
+# Using the uncombined IBD dataset
+# Figure 1
+# Alcohol
+
+
+# IBD
+
 ```
 
