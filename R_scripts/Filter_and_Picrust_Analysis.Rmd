@@ -22,6 +22,7 @@ library(DESeq2)
 library(GGally)
 library(phyloseq)
 library(microbiome)
+library(ggVennDiagram)
 ```
 
 
@@ -125,25 +126,12 @@ ibd_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
 ```
 
 ```{r plotting}
-# source('ggpicrust2_errorbar_function_fixed.R')
-# 
-# 
-# alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
-# 
-# alcohol_peb = pathway_errorbar_fixed(abundance = pathways_alcohol, 
-#                      daa_results_df = alcohol_daa_annotated_results_df, 
-#                      Group = alc_merged_data$alcohol_intake_status, 
-#                      wrap_label = T, wraplength=60,
-#                      fc_cutoff = 0, order_by_log = F,
-#                      p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
-#                      ko_to_kegg = FALSE, 
-#                      p_value_bar = TRUE, 
-#                      x_lab = "description")
-# 
-# alcohol_peb
+source('ggpicrust2_errorbar_function_fixed.R')
 
-# ggsave("Assignment 6 - KEGG Error Bar Fixed.png",
-       # plot = peb, width = 18, height = 10)
+
+alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
+
+# Explain this!
 ```
 
 ```{r plotting}
@@ -227,6 +215,58 @@ ibd_ps = phyloseq(ibd_counts, ibd_sam_data, ibd_tax_wrangled)
 
 # print out the ps
 ibd_ps
+
+# Core microbiome plots
+
+# Alcohol
+
+# Rarefy if desired and convert to relative abundance, use tax_glom (optional)
+alc_psrare = rarefy_even_depth(alc_ps, sample.size = 51)
+alc_ps_rare_relab = transform(alc_psrare, 'compositional')
+alc_ps_rare_relab_genus = tax_glom(alc_ps_rare_relab, 'Genus')
+
+# Subset your phyloseq object
+low_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_status == 'Low')
+high_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_status == 'High')
+
+# Find core members
+ASVs_low_alcohol_intake = core_members(low_alcohol_intake, detection=0.001, prevalence = 0.8)
+ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, prevalence = 0.8)
+
+ggVennDiagram(list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
+      			  set_size = 3,
+              category.names = c('low_alcohol_intake','high_alcohol_intake'))
+
+# Need to save this in the Figures folder inside of the Results folder
+
+# IBD
+
+# Rarefy if desired and convert to relative abundance, use tax_glom (optional)
+ibd_psrare = rarefy_even_depth(ibd_ps, sample.size = 120)
+ibd_ps_rare_relab = transform(ibd_psrare, 'compositional')
+ibd_ps_rare_relab_genus = tax_glom(ibd_ps_rare_relab, 'Genus')
+
+# Subset your phyloseq object
+healthy = subset_samples(ibd_ps_rare_relab_genus, Condition == 'Healthy')
+crohn_disease = subset_samples(ibd_ps_rare_relab_genus, Condition == "Crohn's Disease")
+ulcerative_colitis = subset_samples(ibd_ps_rare_relab_genus, Condition == "Ulcerative Colitis")
+
+# Find core members
+ASVs_healthy = core_members(healthy, detection=0.001, prevalence = 0.8)
+ASVs_crohn_disease = core_members(crohn_disease, detection=0.001, prevalence = 0.8)
+ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prevalence = 0.8)
+
+ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
+      			  set_size = 3,
+              category.names = c('Healthy',"Cronh's Disease", "Ulcerative Colitis"))
+# Need to save this in the Figures folder inside of the Results folder
+
+# Combine both core microbiome
+ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
+      			  set_size = 2,
+              category.names = c('Healthy',"CD", "UC", 'low_alcohol_intake','high_alcohol_intake')) +
+              theme(text = element_text(size = 18))
+# Maybe save this in the Figures folder inside of the Results folder
 
 ```
 
