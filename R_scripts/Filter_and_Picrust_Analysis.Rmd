@@ -20,6 +20,8 @@ library(dplyr)
 library(ggpicrust2)
 library(DESeq2)
 library(GGally)
+library(phyloseq)
+library(microbiome)
 ```
 
 
@@ -64,12 +66,12 @@ ryan_ibd_data_filtered$Medications = ifelse(
 # Make sure both are data frames
 alc_fixed = as.data.frame(alc_fixed)
 p8_manifest = read.table("../Datasets/p8_manifest.tsv", header = TRUE, sep = "\t")
-alc_merged_data = left_join(alc_fixed, p8_manifest, by = "sample.id")  # replace "sample.id"
+alc_merged_data = left_join(alc_fixed, p8_manifest)
 
 # IBD
 ryan_ibd_data_filtered = as.data.frame(ryan_ibd_data_filtered)
 ryan_manifest = read.table("../Datasets/ryan_manifest.tsv", header = TRUE, sep = "\t")
-ryan_ibd_merged_data = left_join(ryan_ibd_data_filtered, ryan_manifest, by = "sample.id")
+ryan_ibd_merged_data = left_join(ryan_ibd_data_filtered, ryan_manifest)
 
 # Combine both IBD conditions into IBD and leave in the same column Condition (Only IBD vs Healthy) for PICRUST only
 
@@ -123,22 +125,22 @@ ibd_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
 ```
 
 ```{r plotting}
-source('ggpicrust2_errorbar_function_fixed.R')
-
-
-alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
-
-alcohol_peb = pathway_errorbar_fixed(abundance = pathways_alcohol, 
-                     daa_results_df = alcohol_daa_annotated_results_df, 
-                     Group = alc_merged_data$alcohol_intake_status, 
-                     wrap_label = T, wraplength=60,
-                     fc_cutoff = 0, order_by_log = F,
-                     p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
-                     ko_to_kegg = FALSE, 
-                     p_value_bar = TRUE, 
-                     x_lab = "description")
-
-alcohol_peb
+# source('ggpicrust2_errorbar_function_fixed.R')
+# 
+# 
+# alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
+# 
+# alcohol_peb = pathway_errorbar_fixed(abundance = pathways_alcohol, 
+#                      daa_results_df = alcohol_daa_annotated_results_df, 
+#                      Group = alc_merged_data$alcohol_intake_status, 
+#                      wrap_label = T, wraplength=60,
+#                      fc_cutoff = 0, order_by_log = F,
+#                      p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
+#                      ko_to_kegg = FALSE, 
+#                      p_value_bar = TRUE, 
+#                      x_lab = "description")
+# 
+# alcohol_peb
 
 # ggsave("Assignment 6 - KEGG Error Bar Fixed.png",
        # plot = peb, width = 18, height = 10)
@@ -165,15 +167,66 @@ ibd_peb
 
 ```{r core microbiome}
 # Using the uncombined IBD dataset
+# Loading datasets
+alcohol_taxonomy = read.delim('../Datasets/p8alcohol_taxonomy.tsv', row.names = 1)
+alcohol_counts = read.delim('../Datasets/p8alcohol_feature-table.txt', skip=1, row.names=1)
+alc_metadata = read.delim("../Datasets/alc_merged_data.tsv", row.names = 1)
+
+ibd_taxonomy = read.delim('../Datasets/ryan_taxonomy.tsv', row.names = 1) 
+ibd_counts = read.delim('../Datasets/ryan_feature-table.txt', skip=1, row.names=1)
+ibd_metadata = read.delim("../Datasets/ryan_ibd_merged_data.tsv", row.names = 1)
+
 # Figure 2
 # Alcohol
 
+# counts datatset
+alcohol_counts = as.matrix(alcohol_counts)
+alc_counts = otu_table(alcohol_counts, taxa_are_rows = T)
 
+# metadata
+alc_sam_data = sample_data(alc_metadata)
+
+# taxanomy dataset
+alc_tax_wrangled = alcohol_taxonomy |>
+  separate(col = Taxon, 
+           into = c('Domain','Phylum','Class','Order',
+                    'Family','Genus','Species'),
+           sep=';', fill='right') |>
+           select(-Confidence) |>
+           as.matrix()
+alc_tax_wrangled = tax_table(alc_tax_wrangled)
+
+# combine
+alc_ps = phyloseq(alc_counts, alc_sam_data, alc_tax_wrangled)
+
+# print out the ps
+alc_ps
 
 
 # IBD
 
+# counts datatset
+ibd_counts = as.matrix(ibd_counts)
+ibd_counts = otu_table(ibd_counts, taxa_are_rows = T)
 
+# metadata
+ibd_sam_data = sample_data(ibd_metadata)
+
+# taxanomy dataset
+ibd_tax_wrangled = ibd_taxonomy |>
+  separate(col = Taxon, 
+           into = c('Domain','Phylum','Class','Order',
+                    'Family','Genus','Species'),
+           sep=';', fill='right') |>
+           select(-Confidence) |>
+           as.matrix()
+ibd_tax_wrangled = tax_table(ibd_tax_wrangled)
+
+# combine
+ibd_ps = phyloseq(ibd_counts, ibd_sam_data, ibd_tax_wrangled)
+
+# print out the ps
+ibd_ps
 
 ```
 
