@@ -23,6 +23,7 @@ library(GGally)
 library(phyloseq)
 library(microbiome)
 library(ggVennDiagram)
+library(vegan)
 ```
 
 
@@ -274,8 +275,100 @@ ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, AS
 # Using the uncombined IBD dataset
 # Figure 1
 # Alcohol
+rarecurve(t(data.frame(alc_ps@otu_table)),
+          step = 1000)
+
+alc_psrare = alc_ps %>% rarefy_even_depth(sample.size = 51, rngseed = 5362)
+
+table(sample_sums(alc_psrare))
+
+set.seed(5362)
+alc_p = plot_richness(alc_psrare, x = 'alcohol_intake_status', 
+                  measures = c('Shannon'),
+                  color = 'alcohol_intake_status')
+alc_p
+
+# Extract the data from p
+set.seed(5362)
+alc_p_data = alc_p$data
+
+alc_p_formatted = alc_p_data %>% ggplot(aes(alcohol_intake_status,value,fill = alcohol_intake_status)) +
+  
+  # Don't plot outlier points - we're plotting all points below.
+  geom_boxplot(outlier.shape = NA) + 
+  
+  # Now we can space the points out sideways, reducing overlap.
+  geom_jitter(height=0,width=0.2) +
+  
+  # Add some formatting
+  theme_classic(base_size=13) +
+  facet_wrap(~variable,ncol=4,scales = 'free_y') +
+  ylab('Alpha Diversity') + xlab(NULL) +
+  theme(axis.text.x = element_text(angle = 45,vjust=1,hjust=1)) +
+  labs(fill='alchol intake status')
+alc_p_formatted
+
+# Wilcoxon test
+comparisons = list(c("Low","High"))
+
+# Oftentimes the p values get cut off at the top - just expand the axis by a fraction
+alcohol_shannon_diversity_plot = alc_p_formatted +
+  stat_compare_means(comparisons = comparisons, method='wilcox.test', size=5) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) # c(bottom, top)
+alcohol_shannon_diversity_plot
+
+# saving the figure
+# ggsave('../Results/Figures - Shannon Alpha Diversity Plot.jpeg',
+#        plot = shannon_diversity_plot, # by defult, ggsave will save the last plot
+#        height=7, width = 14) # units are inches by default
 
 # IBD 
+rarecurve(t(data.frame(ibd_ps@otu_table)),
+          step = 1000)
+
+ibd_psrare = ibd_ps %>% rarefy_even_depth(sample.size = 120, rngseed = 5362)
+
+table(sample_sums(ibd_psrare))
+
+set.seed(5362)
+ibd_p = plot_richness(ibd_psrare, x = 'Condition', 
+                  measures = c('Shannon'),
+                  color = 'Condition')
+ibd_p
+
+# Extract the data from p
+set.seed(5362)
+ibd_p_data = ibd_p$data
+
+ibd_p_formatted = ibd_p_data %>% ggplot(aes(Condition,value,fill = Condition)) +
+  
+  # Don't plot outlier points - we're plotting all points below.
+  geom_boxplot(outlier.shape = NA) + 
+  
+  # Now we can space the points out sideways, reducing overlap.
+  geom_jitter(height=0,width=0.2) +
+  
+  # Add some formatting
+  theme_classic(base_size=13) +
+  facet_wrap(~variable,ncol=4,scales = 'free_y') +
+  ylab('Alpha Diversity') + xlab(NULL) +
+  theme(axis.text.x = element_text(angle = 45,vjust=1,hjust=1)) +
+  labs(fill='Condition')
+ibd_p_formatted
+
+# Wilcoxon test
+comparisons = list(c("Healthy","Crohn's Disease", "Ulcerative Colitis"))
+
+# Oftentimes the p values get cut off at the top - just expand the axis by a fraction
+ibd_shannon_diversity_plot = ibd_p_formatted +
+  stat_compare_means(comparisons = comparisons, method='wilcox.test', size=5) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) # c(bottom, top)
+ibd_shannon_diversity_plot
+
+# saving the figure
+# ggsave('../Results/Figures - Shannon Alpha Diversity Plot.jpeg',
+#        plot = shannon_diversity_plot, # by defult, ggsave will save the last plot
+#        height=7, width = 14) # units are inches by default
 
 ```
 
