@@ -116,9 +116,18 @@ alcohol_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
                                                daa_results_df = alcohol_daa_results_df)
 
 # IBD
+
+# Merging IBD CD and UC Conditions
+picrust_ibd_merged_data = ryan_ibd_merged_data %>% 
+  mutate(Condition_merged = case_when(
+    str_detect(Condition, "Healthy") ~ "Healthy",
+    str_detect(Condition, "Crohn's Disease") ~ "IBD",
+    str_detect(Condition, "Ulcerative Colitis") ~ "IBD"
+  ))
+
 ibd_daa_results_df = pathway_daa(abundance = pathways_ibd,
-                              metadata = ryan_ibd_merged_data,
-                              group = "Condition",
+                              metadata = picrust_ibd_merged_data,
+                              group = "Condition_merged",
                               daa_method = "DESeq2",
                               select = NULL, reference = NULL)
 
@@ -133,6 +142,7 @@ source('ggpicrust2_errorbar_function_fixed.R')
 alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
 
 # Explain this!
+# This makes sense, as there are no significant differences between different alcohol inflammatory environments' high level pathways 
 ```
 
 ```{r plotting}
@@ -143,7 +153,7 @@ ibd_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
 
 ibd_peb = pathway_errorbar_fixed(abundance = pathways_ibd, 
                      daa_results_df = ibd_daa_annotated_results_df,
-                     Group = ryan_ibd_merged_data$Condition,
+                     Group = picrust_ibd_merged_data$Condition_merged,
                      wrap_label = T, wraplength=60,
                      fc_cutoff = 0.2, order_by_log = F,
                      p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
