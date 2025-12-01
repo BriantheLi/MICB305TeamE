@@ -271,114 +271,295 @@ ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, AS
 
 ```
 
-```{r Alpha diversity plot}
-# Using the uncombined IBD dataset
-# Figure 1
-# Alcohol
-rarecurve(t(data.frame(alc_ps@otu_table)),
-          step = 1000)
+```{r load_library}
+library(tidyverse)
+library(phyloseq)
+library(vegan)
+library(microbiome)
+library(indicspecies)
+library(writexl)
+library(ggpubr) # load packages for stat_compare_means
+library(dunn.test)
+library(ggVennDiagram)
+library(pairwiseAdonis)
+```
 
-alc_psrare = alc_ps %>% rarefy_even_depth(sample.size = 51, rngseed = 5362)
+# R Load data
 
-table(sample_sums(alc_psrare))
+```{r data}
+# data for both alcohol & IBD
+metadata_alcohol = read.delim("../Datasets/alc_merged_data.tsv", row.names = 1)
+taxonomy_alcohol = read.delim("../Datasets/p8alcohol_taxonomy.tsv", row.names = 1)
+counts_alcohol = read.delim("../Datasets/p8alcohol_feature-table.txt", skip=1, row.names=1)
 
-set.seed(5362)
-alc_p = plot_richness(alc_psrare, x = 'alcohol_intake_status', 
-                  measures = c('Shannon'),
-                  color = 'alcohol_intake_status')
-alc_p
-
-# Extract the data from p
-set.seed(5362)
-alc_p_data = alc_p$data
-
-alc_p_formatted = alc_p_data %>% ggplot(aes(alcohol_intake_status,value,fill = alcohol_intake_status)) +
-  
-  # Don't plot outlier points - we're plotting all points below.
-  geom_boxplot(outlier.shape = NA) + 
-  
-  # Now we can space the points out sideways, reducing overlap.
-  geom_jitter(height=0,width=0.2) +
-  
-  # Add some formatting
-  theme_classic(base_size=13) +
-  facet_wrap(~variable,ncol=4,scales = 'free_y') +
-  ylab('Alpha Diversity') + xlab(NULL) +
-  theme(axis.text.x = element_text(angle = 45,vjust=1,hjust=1)) +
-  labs(fill='alchol intake status')
-alc_p_formatted
-
-# Wilcoxon test
-comparisons = list(c("Low","High"))
-
-# Oftentimes the p values get cut off at the top - just expand the axis by a fraction
-alcohol_shannon_diversity_plot = alc_p_formatted +
-  stat_compare_means(comparisons = comparisons, method='wilcox.test', size=5) +
-  scale_y_continuous(expand = expansion(mult = c(0, .1))) # c(bottom, top)
-alcohol_shannon_diversity_plot
-
-# saving the figure
-# ggsave('../Results/Figures - Shannon Alpha Diversity Plot.jpeg',
-#        plot = shannon_diversity_plot, # by defult, ggsave will save the last plot
-#        height=7, width = 14) # units are inches by default
-
-# IBD 
-rarecurve(t(data.frame(ibd_ps@otu_table)),
-          step = 1000)
-
-ibd_psrare = ibd_ps %>% rarefy_even_depth(sample.size = 120, rngseed = 5362)
-
-table(sample_sums(ibd_psrare))
-
-set.seed(5362)
-ibd_p = plot_richness(ibd_psrare, x = 'Condition', 
-                  measures = c('Shannon'),
-                  color = 'Condition')
-ibd_p
-
-# Extract the data from p
-set.seed(5362)
-ibd_p_data = ibd_p$data
-
-ibd_p_formatted = ibd_p_data %>% ggplot(aes(Condition,value,fill = Condition)) +
-  
-  # Don't plot outlier points - we're plotting all points below.
-  geom_boxplot(outlier.shape = NA) + 
-  
-  # Now we can space the points out sideways, reducing overlap.
-  geom_jitter(height=0,width=0.2) +
-  
-  # Add some formatting
-  theme_classic(base_size=13) +
-  facet_wrap(~variable,ncol=4,scales = 'free_y') +
-  ylab('Alpha Diversity') + xlab(NULL) +
-  theme(axis.text.x = element_text(angle = 45,vjust=1,hjust=1)) +
-  labs(fill='Condition')
-ibd_p_formatted
-
-# Wilcoxon test
-comparisons = list(c("Healthy","Crohn's Disease", "Ulcerative Colitis"))
-
-# Oftentimes the p values get cut off at the top - just expand the axis by a fraction
-ibd_shannon_diversity_plot = ibd_p_formatted +
-  stat_compare_means(comparisons = comparisons, method='wilcox.test', size=5) +
-  scale_y_continuous(expand = expansion(mult = c(0, .1))) # c(bottom, top)
-ibd_shannon_diversity_plot
-
-# saving the figure
-# ggsave('../Results/Figures - Shannon Alpha Diversity Plot.jpeg',
-#        plot = shannon_diversity_plot, # by defult, ggsave will save the last plot
-#        height=7, width = 14) # units are inches by default
+metadata_ibd = read.delim("../Datasets/ryan_ibd_merged_data.tsv", row.names = 1)
+taxonomy_ibd = read.delim("../Datasets/ryan_taxonomy.tsv", row.names = 1)
+counts_ibd = read.delim("../Datasets/ryan_feature-table.txt", skip = 1, row.names = 1)
 
 ```
 
-```{r Beta }
-# Using the uncombined IBD dataset
-# Figure 1
-# Alcohol
+# Phyloseq obj for alpha diversity for alcohol
+```{r alcohol vs non alcohol}
+# counts
+counts_alcohol = as.matrix(counts_alcohol)
+alcohol_otu = otu_table(counts_alcohol, taxa_are_rows = T)
+# metadata set
+metadata_alcohol_sample = sample_data(metadata_alcohol)
+# taxonomy dataset
+taxonomy_alcohol_data = taxonomy_alcohol |>
+  separate(col = Taxon,
+           into = c('Domain', 'Phylum', 'Class', 'Order',
+                     'Family', 'Genus', 'Species'),
+            sep=';', fill = 'right') |>
+  select(-Confidence) |>
+  as.matrix()
+taxonomy_alcohol_data = tax_table(taxonomy_alcohol_data)
 
+# phyloseq combine
 
-# IBD
+# intersect(taxa_names(alcohol_otu), taxa_names(taxonomy_alcohol_altered))
+ps_alcohol = phyloseq(alcohol_otu, metadata_alcohol_sample, taxonomy_alcohol_data)
+ps_alcohol
+```
+# Alpha shannon diversity for alcohol vs non alcohol
+## Panel A
+```{r}
+# ps = readRDS('C:/MICB_305/Do_Thea_Assignment5/phyloseq_taxonomy.rds')
+# Histogram is for the overview of ps_alcohol
+hist(sample_sums(ps_alcohol))
+# This is similar to what we have seen in qiime, it's just that it's clearer
+rarecurve(t(data.frame(ps_alcohol@otu_table)),
+          step=500,
+          label = FALSE)
+# Sampling depth is sample.size
+# rngseed is random seed (set.seed)
+psrare_alcohol = ps_alcohol |>
+  rarefy_even_depth(sample.size = 9000, rngseed=123)
 
+table(sample_sums(psrare_alcohol)) # ensure remaining samples have the same sampling depth as the chosen one above
+
+# Calculate Shannon alpha diversity
+# This is for a general observation of Shannon diversity plot
+shannon = plot_richness(psrare_alcohol, x = "alcohol_intake_status", measures = "Shannon")
+
+set.seed(123)
+plot_alcohol = plot_richness(psrare_alcohol, x = "alcohol_intake_status",
+                     measures = "Shannon",
+                     color = "alcohol_intake_status",
+                     )
+plot_alcohol
+# Now make a publication-ready plot
+pdata_alcohol = plot_alcohol$data
+str(pdata_alcohol)
+
+shannon_alcohol_plot <- pdata_alcohol |>
+  ggplot(aes(alcohol_intake_status, value, fill = alcohol_intake_status)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(height = 0.2, width = 0.2, size = 2, alpha = 0.7) +
+  theme_classic(base_size = 14) +
+  labs(fill = "alcohol_intake_status") + 
+  scale_fill_manual(values = c("Low" = "#CC79A7",
+                               "High" = "#A6CEE3")) +
+  theme(legend.position = "none") +
+  labs(title = "Shannon Alpha Diversity between WT and Susceptible Groups",
+       x = "alcohol_intake_status",
+       y = "Shannon Diversity Index") +
+  stat_compare_means(comparisons = list(c("Low", "High")),
+                     method = "wilcox.test",
+                     label = "p.format",
+                     label.y = max(pdata_alcohol$value) + 0.2)
+shannon_alcohol_plot
+```
+```{r Statistical test}
+# Rerun statistical test for alcohol to make sure it is correctly plotted
+kruskal.test(value ~ alcohol_intake_status, data = pdata_alcohol)
+# p-value = 0.2248, which indicates non-significant difference between low and high alcohol intake groups
 ```
 
+# Phyloseq object for IBD
+```{r}
+# counts
+counts_ibd = as.matrix(counts_ibd)
+ibd_otu = otu_table(counts_ibd, taxa_are_rows = T)
+# metadata set
+metadata_ibd_sample = sample_data(metadata_ibd)
+# taxonomy dataset
+taxonomy_ibd_data = taxonomy_ibd |>
+  separate(col = Taxon,
+           into = c('Domain', 'Phylum', 'Class', 'Order',
+                     'Family', 'Genus', 'Species'),
+            sep=';', fill = 'right') |>
+  select(-Confidence) |>
+  as.matrix()
+taxonomy_ibd_data = tax_table(taxonomy_ibd_data)
+
+# phyloseq combine
+
+# intersect(taxa_names(alcohol_otu), taxa_names(taxonomy_alcohol_altered))
+ps_ibd = phyloseq(ibd_otu, metadata_ibd_sample, taxonomy_ibd_data)
+ps_ibd
+```
+# Alpha shannon diversity for IBD
+## Panel B
+```{r}
+# Histogram is for the overview of ps_alcohol
+hist(sample_sums(ps_ibd))
+# This is similar to what we have seen in qiime, it's just that it's clearer
+rarecurve(t(data.frame(ps_ibd@otu_table)),
+          step=1000,
+          label = FALSE)
+# Sampling depth is sample.size
+# rngseed is random seed (set.seed)
+psrare_ibd = ps_ibd |>
+  rarefy_even_depth(sample.size = 4167, rngseed=123)
+
+table(sample_sums(psrare_ibd)) # ensure remaining samples have the same sampling depth as the chosen one above
+
+# Calculate Shannon alpha diversity
+# This is for a general observation of Shannon diversity plot
+shannon_ibd = plot_richness(psrare_ibd, x = "Condition", measures = "Shannon")
+shannon_ibd
+
+set.seed(123)
+plot_ibd = plot_richness(psrare_ibd, x = "Condition",
+                     measures = "Shannon",
+                     color = "Condition",
+                     )
+plot_ibd
+# Now make a publication-ready plot
+pdata_ibd = plot_ibd$data
+str(pdata_ibd)
+
+comparisons = list(c("Healthy", "Ulcerative Colitis"), c("Ulcerative Colitis", "Crohn's Disease"), c("Healthy", "Crohn's Disease"))
+y_positions = c(max(pdata_ibd$value + 0.1),
+                max(pdata_ibd$value + 0.2),
+                max(pdata_ibd$value + 0.3))
+
+shannon_ibd_plot <- pdata_ibd |>
+  ggplot(aes(Condition, value, fill = Condition)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(height = 0.2, width = 0.2, size = 2, alpha = 0.7) +
+  theme_classic(base_size = 14) +
+  labs(fill = "Condition") + 
+  scale_fill_manual(values = c("Crohn's Disease" = "#CC79A7",
+                               "Ulcerative Colitis" = "#A6CEE3",
+                               "Healthy" = "#CAB2D6")) +
+  theme(legend.position = "none") +
+  labs(title = "Shannon Alpha Diversity between UC, CD, and Healthy Groups",
+       x = "Condition",
+       y = "Shannon Diversity Index") +
+  stat_compare_means(comparisons = comparisons,
+                     method = "wilcox.test",
+                     label = "p.format",
+                     y.position = y_positions)
+shannon_ibd_plot
+```
+```{r Statistical test}
+# Kruskal-Wallis test
+kruskal.test(value ~ Condition, data = pdata_ibd)
+# At least 1 group is significantly different
+dunn.test(pdata_ibd$value, pdata_ibd$Condition, method = "BH")
+```
+
+# Jaccard for alcohol
+## Panel C
+```{r}
+# Jaccard considers richness only (no evenness or phylogenetic distances)
+ps_jaccard_alcohol = phyloseq::distance(psrare_alcohol, method = "jaccard", binary = TRUE)
+View(as.matrix(ps_jaccard_alcohol)) # Every pairwise comparison included
+
+# MDS scaling
+set.seed(123)
+mds_alcohol = metaMDS(ps_jaccard_alcohol)
+
+# Extract data
+mds_data_alcohol = mds_alcohol$points %>%
+  as.data.frame %>%
+  merge(sample_data(psrare_alcohol), by='row.names', sort=F)
+head(mds_data_alcohol)
+
+# Plot alcohol Jaccard diversity (Not Venn Diagram)
+alcohol_plot = mds_data_alcohol %>%
+  ggplot(aes(MDS1,MDS2,color = alcohol_intake_status)) +
+  geom_point(size = 3) +
+  stat_ellipse() +
+  theme_classic(base_size=18) +
+  scale_colour_manual(values = c("Low" = "#A6CEE3",
+                                 "High" = "#CAB2D6")) +
+  labs(title = "Jaccard Beta-Diversity between Alcohol Intake Groups",
+       colour = "Alcohol Intake Status")
+alcohol_plot
+
+# Venn Diagram?
+# This is to separate OTUs of low and high alcohol intake
+# Extract sample names by group
+low_alcohol = sample_names(ps_alcohol)[sample_data(ps_alcohol)$alcohol_intake_status == "Low"]
+high_alcohol = sample_names(ps_alcohol)[sample_data(ps_alcohol)$alcohol_intake_status == "High"]
+
+# Get OTUs present in each group
+otu_low = unique(unlist(taxa_names(prune_samples(low_alcohol, ps_alcohol))))
+otu_high = unique(unlist(taxa_names(prune_samples(high_alcohol, ps_alcohol))))
+
+# Create list
+otu_list <- list(Low = otu_low, High = otu_high)
+
+# Draw Venn Diagram using ggplot
+venn_diagram = ggVennDiagram(otu_list,
+                             label_alpha = 0,
+                             set_size = 5) +
+  scale_fill_gradient(low = "#A6CEE3", high = "#CAB2D6") + 
+  labs(title = "Venn Diagram")
+venn_diagram
+```
+
+```{r Statistical Test}
+all(rownames(pdata_alcohol) == rownames(as.matrix(ps_jaccard_alcohol)))
+pdata_alcohol_clean = select(pdata_alcohol, -se)
+
+adonis2(ps_jaccard_alcohol ~ alcohol_intake_status, data = pdata_alcohol_clean)
+# p-value = 0.488, indicating no significant difference
+# Since there are only 2 groups for alcohol intake, I did not use pairwise permanova here
+```
+
+# Jaccard for IBD
+## Pannel D
+```{r}
+ps_jaccard_ibd = phyloseq::distance(psrare_ibd, method = "jaccard", binary = TRUE)
+View(as.matrix(ps_jaccard_ibd)) # Every pairwise comparison included
+
+# MDS scaling
+set.seed(123)
+mds_ibd = metaMDS(ps_jaccard_ibd)
+
+# Extract data
+mds_data_ibd = mds_ibd$points %>%
+  as.data.frame %>%
+  merge(sample_data(psrare_ibd), by='row.names', sort=F)
+head(mds_data_ibd)
+
+# Plot IBD Jaccard diversity 
+ibd_plot = mds_data_ibd %>%
+  ggplot(aes(MDS1,MDS2,color = Condition)) +
+  geom_point(size = 3) +
+  stat_ellipse() +
+  theme_classic(base_size=18) +
+  scale_colour_manual(values = c("Ulcerative Colitis" = "#A6CEE3",
+                                 "Crohn's Disease" = "#CAB2D6",
+                                 "Healthy" = "#CC79A7")) +
+  labs(title = "Jaccard Beta-Diversity between Healthy and IBD Patients",
+       colour = "Condition")
+ibd_plot
+```
+```{r Statistical Test}
+adonis2(ps_jaccard_ibd ~ Condition, data = pdata_ibd)
+# Overall p-value between 3 groups is 0.001, which indicates significant difference between all 3 groups
+
+# Now doing pairwise PERMANOVA to see if there is significant difference between conditions
+pairwise.adonis(ps_jaccard_ibd, factors = pdata_ibd$Condition, 
+                sim.method = "jaccard", p.adjust.m = "BH") # in dunn.test I used BH for method so maybe I should use it consistently?
+# Look at p.adjusted for p-values between different conditions
+# Ulcerative Colitis vs Crohn's Disease: p-value = 0.0020 (significant difference)
+# Ulcerative Colitis vs Healthy: 0.0015 (significant difference)
+# Crohn's Disease vs Healthy: 0.0015 (significant difference)
+```
+# VICTORY!!
