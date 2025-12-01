@@ -24,6 +24,11 @@ library(phyloseq)
 library(microbiome)
 library(ggVennDiagram)
 library(vegan)
+library(indicspecies)
+library(writexl)
+library(ggpubr) # load packages for stat_compare_means
+library(dunn.test)
+library(pairwiseAdonis)
 ```
 
 
@@ -271,17 +276,6 @@ ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, AS
 
 ```
 
-```{r load_library}
-library(tidyverse)
-library(phyloseq)
-library(vegan)
-library(microbiome)
-library(indicspecies)
-library(writexl)
-library(ggpubr) # load packages for stat_compare_means
-library(dunn.test)
-library(ggVennDiagram)
-library(pairwiseAdonis)
 ```
 
 # R Load data
