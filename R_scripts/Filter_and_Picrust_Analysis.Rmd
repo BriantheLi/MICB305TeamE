@@ -252,12 +252,15 @@ high_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_sta
 ASVs_low_alcohol_intake = core_members(low_alcohol_intake, detection=0.001, prevalence = 0.8)
 ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, prevalence = 0.8)
 
-alcohol_venn_core_microbiome = ggVennDiagram(list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
-      			  set_size = 5,
-              category.names = c('low_alcohol','high_alcohol')) + 
-              theme(plot.margin = margin(8, 40, 8, 40)) +
-              coord_cartesian(clip = "off")
+alcohol_venn_core_microbiome = ggVennDiagram(
+    list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
+    set_size = 5,
+    category.names = c('low_alcohol','high_alcohol')) +
+    theme(plot.margin = margin(8, 40, 8, 40)) +
+    coord_cartesian(clip = "off") +
+    scale_fill_gradientn(colors = c("#C4D8F3", "#FFCC9E"))
 alcohol_venn_core_microbiome
+
 # Need to save this in the Figures folder inside of the Results folder
 
 # IBD
@@ -277,17 +280,27 @@ ASVs_healthy = core_members(healthy, detection=0.001, prevalence = 0.8)
 ASVs_crohn_disease = core_members(crohn_disease, detection=0.001, prevalence = 0.8)
 ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prevalence = 0.8)
 
-ibd_venn_core_microbiome = ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
-      			  set_size = 4,
-              category.names = c('Healthy',"CD", "UC"))
+ibd_venn_core_microbiome = ggVennDiagram(
+    list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
+    set_size = 4,
+    category.names = c("Healthy", "CD", "UC")) +
+    scale_fill_gradientn(colors = c("#99D48B", "#B99C33", "#D19FC0"))
 ibd_venn_core_microbiome
 # Need to save this in the Figures folder inside of the Results folder
 
 # Combine both core microbiome
-combined_venn_core_microbiome = ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
-      			  set_size = 3,
-              category.names = c('Healthy',"CD", "UC", 'low_alcohol','high_alcohol')) +
-              theme(text = element_text(size = 12))
+combined_venn_core_microbiome = ggVennDiagram(
+      list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
+      set_size = 3,
+      category.names = c("Healthy", "CD", "UC", "low_alcohol", "high_alcohol")) +
+      theme(text = element_text(size = 12)) +
+      scale_fill_gradientn( colors = c(
+      "#99D48B",  # Healthy
+      "#B99C33",  # CD
+      "#D19FC0",  # UC
+      "#C4D8F3",  # low alcohol
+      "#FFCC9E"   # high alcohol
+      ))
 combined_venn_core_microbiome
 # Maybe save this in the Figures folder inside of the Results folder
 # ggsave(
