@@ -237,7 +237,7 @@ ibd_ps
 # Alcohol
 
 # Rarefy if desired and convert to relative abundance, use tax_glom (optional)
-alc_psrare = rarefy_even_depth(alc_ps, sample.size = 51)
+alc_psrare = rarefy_even_depth(alc_ps, sample.size = 51, rngseed=123)
 alc_ps_rare_relab = transform(alc_psrare, 'compositional')
 alc_ps_rare_relab_genus = tax_glom(alc_ps_rare_relab, 'Genus')
 
@@ -249,16 +249,18 @@ high_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_sta
 ASVs_low_alcohol_intake = core_members(low_alcohol_intake, detection=0.001, prevalence = 0.8)
 ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, prevalence = 0.8)
 
-ggVennDiagram(list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
-      			  set_size = 3,
-              category.names = c('low_alcohol_intake','high_alcohol_intake'))
-
+alcohol_venn_core_microbiome = ggVennDiagram(list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
+      			  set_size = 5,
+              category.names = c('low_alcohol','high_alcohol')) + 
+              theme(plot.margin = margin(8, 40, 8, 40)) +
+              coord_cartesian(clip = "off")
+alcohol_venn_core_microbiome
 # Need to save this in the Figures folder inside of the Results folder
 
 # IBD
 
 # Rarefy if desired and convert to relative abundance, use tax_glom (optional)
-ibd_psrare = rarefy_even_depth(ibd_ps, sample.size = 120)
+ibd_psrare = rarefy_even_depth(ibd_ps, sample.size = 120, rngseed=123)
 ibd_ps_rare_relab = transform(ibd_psrare, 'compositional')
 ibd_ps_rare_relab_genus = tax_glom(ibd_ps_rare_relab, 'Genus')
 
@@ -272,18 +274,25 @@ ASVs_healthy = core_members(healthy, detection=0.001, prevalence = 0.8)
 ASVs_crohn_disease = core_members(crohn_disease, detection=0.001, prevalence = 0.8)
 ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prevalence = 0.8)
 
-ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
-      			  set_size = 3,
-              category.names = c('Healthy',"Cronh's Disease", "Ulcerative Colitis"))
+ibd_venn_core_microbiome = ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
+      			  set_size = 4,
+              category.names = c('Healthy',"CD", "UC"))
+ibd_venn_core_microbiome
 # Need to save this in the Figures folder inside of the Results folder
 
 # Combine both core microbiome
-ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
-      			  set_size = 2,
-              category.names = c('Healthy',"CD", "UC", 'low_alcohol_intake','high_alcohol_intake')) +
-              theme(text = element_text(size = 18))
+combined_venn_core_microbiome = ggVennDiagram(list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
+      			  set_size = 3,
+              category.names = c('Healthy',"CD", "UC", 'low_alcohol','high_alcohol')) +
+              theme(text = element_text(size = 12))
+combined_venn_core_microbiome
 # Maybe save this in the Figures folder inside of the Results folder
-
+# ggsave(
+#   filename = "combined_venn_core_microbiome.jpeg",
+#   plot = combined_venn_core_microbiome,
+#   path = "../R_scripts",                
+#   width = 10,
+#   height = 10)
 ```
 
 ```
