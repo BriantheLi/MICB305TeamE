@@ -258,7 +258,7 @@ alcohol_venn_core_microbiome = ggVennDiagram(
     category.names = c('low_alcohol','high_alcohol')) +
     theme(plot.margin = margin(8, 40, 8, 40)) +
     coord_cartesian(clip = "off") +
-    scale_fill_gradientn(colors = c("#C4D8F3", "#FFCC9E"))
+    scale_fill_gradientn(colors = c(low = "#C4D8F3", high = "#FFCC9E"))
 alcohol_venn_core_microbiome
 
 # Need to save this in the Figures folder inside of the Results folder
@@ -284,7 +284,7 @@ ibd_venn_core_microbiome = ggVennDiagram(
     list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
     set_size = 4,
     category.names = c("Healthy", "CD", "UC")) +
-    scale_fill_gradientn(colors = c("#99D48B", "#B99C33", "#D19FC0"))
+    scale_fill_gradientn(colors = c(low = "#99D48B", high = "#D19FC0"))
 ibd_venn_core_microbiome
 # Need to save this in the Figures folder inside of the Results folder
 
@@ -294,13 +294,7 @@ combined_venn_core_microbiome = ggVennDiagram(
       set_size = 3,
       category.names = c("Healthy", "CD", "UC", "low_alcohol", "high_alcohol")) +
       theme(text = element_text(size = 12)) +
-      scale_fill_gradientn( colors = c(
-      "#99D48B",  # Healthy
-      "#B99C33",  # CD
-      "#D19FC0",  # UC
-      "#C4D8F3",  # low alcohol
-      "#FFCC9E"   # high alcohol
-      ))
+      scale_fill_gradientn( colors = c(low = "#99D48B", high = "#FFCC9E"))
 combined_venn_core_microbiome
 # Maybe save this in the Figures folder inside of the Results folder
 # ggsave(
