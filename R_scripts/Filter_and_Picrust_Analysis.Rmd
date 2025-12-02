@@ -167,6 +167,9 @@ ibd_peb = pathway_errorbar_fixed(abundance = pathways_ibd,
                      x_lab = "description")
 
 ibd_peb
+
+ggsave("PICRUStAnalysisIBD.png",
+       plot = ibd_peb, width = 18, height = 10)
 ```
 
 ```{r core microbiome}
