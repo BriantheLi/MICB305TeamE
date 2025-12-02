@@ -249,8 +249,8 @@ low_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_stat
 high_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_status == 'High')
 
 # Find core members
-ASVs_low_alcohol_intake = core_members(low_alcohol_intake, detection=0.001, prevalence = 0.8)
-ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, prevalence = 0.8)
+ASVs_low_alcohol_intake = core_members(low_alcohol_intake, detection=0.001, prevalence = 0.1)
+ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, prevalence = 0.1)
 
 alcohol_venn_core_microbiome = ggVennDiagram(
     list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
@@ -276,9 +276,9 @@ crohn_disease = subset_samples(ibd_ps_rare_relab_genus, Condition == "Crohn's Di
 ulcerative_colitis = subset_samples(ibd_ps_rare_relab_genus, Condition == "Ulcerative Colitis")
 
 # Find core members
-ASVs_healthy = core_members(healthy, detection=0.001, prevalence = 0.8)
-ASVs_crohn_disease = core_members(crohn_disease, detection=0.001, prevalence = 0.8)
-ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prevalence = 0.8)
+ASVs_healthy = core_members(healthy, detection=0.001, prevalence = 0.1)
+ASVs_crohn_disease = core_members(crohn_disease, detection=0.001, prevalence = 0.1)
+ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prevalence = 0.1)
 
 ibd_venn_core_microbiome = ggVennDiagram(
     list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
@@ -288,18 +288,10 @@ ibd_venn_core_microbiome = ggVennDiagram(
 ibd_venn_core_microbiome
 # Need to save this in the Figures folder inside of the Results folder
 
-# Combine both core microbiome
-combined_venn_core_microbiome = ggVennDiagram(
-      list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis, ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
-      set_size = 3,
-      category.names = c("Healthy", "CD", "UC", "low_alcohol", "high_alcohol")) +
-      theme(text = element_text(size = 12)) +
-      scale_fill_gradientn( colors = c(low = "#99D48B", high = "#FFCC9E"))
-combined_venn_core_microbiome
 # Maybe save this in the Figures folder inside of the Results folder
 # ggsave(
-#   filename = "combined_venn_core_microbiome.jpeg",
-#   plot = combined_venn_core_microbiome,
+#   filename = "ibd_venn_core_microbiome.jpeg",
+#   plot = ibd_venn_core_microbiome,
 #   path = "../R_scripts",                
 #   width = 10,
 #   height = 10)
