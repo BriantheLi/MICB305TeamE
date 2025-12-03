@@ -255,6 +255,9 @@ ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, pr
 alcohol_venn_core_microbiome = ggVennDiagram(
     list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
     set_size = 5,
+    label_alpha = 1,        
+    label_color = "white",
+    label_size = 5,
     category.names = c('low_alcohol','high_alcohol')) +
     theme(plot.margin = margin(8, 40, 8, 40)) +
     coord_cartesian(clip = "off") +
@@ -262,6 +265,14 @@ alcohol_venn_core_microbiome = ggVennDiagram(
 alcohol_venn_core_microbiome
 
 # Need to save this in the Figures folder inside of the Results folder
+# alcohol_venn_core_microbiome = alcohol_venn_core_microbiome +
+#   theme(text = element_text(size = 18))
+# ggsave(
+#   filename = "figure_2_alcohol_venn_core_microbiome.jpeg",
+#   plot = alcohol_venn_core_microbiome,
+#   path = "../R_scripts",
+#   width = 10,
+#   height = 10)
 
 # IBD
 
@@ -283,16 +294,20 @@ ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prev
 ibd_venn_core_microbiome = ggVennDiagram(
     list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
     set_size = 4,
-    category.names = c("Healthy", "CD", "UC")) +
-    scale_fill_gradientn(colors = c(low = "#99D48B", high = "#D19FC0"))
+    category.names = c("Healthy", "CD", "UC"),
+    label_alpha = 1,        
+    label_color = "white",
+    label_size = 5) +
+  scale_fill_gradientn(colors = c("#99D48B", "#D19FC0"))
 ibd_venn_core_microbiome
-# Need to save this in the Figures folder inside of the Results folder
 
-# Maybe save this in the Figures folder inside of the Results folder
+# Save this in the Figures folder inside of the Results folder
+# ibd_venn_core_microbiome <- ibd_venn_core_microbiome +
+#   theme(text = element_text(size = 20))
 # ggsave(
-#   filename = "ibd_venn_core_microbiome.jpeg",
+#   filename = "figure_2_ibd_venn_core_microbiome.jpeg",
 #   plot = ibd_venn_core_microbiome,
-#   path = "../R_scripts",                
+#   path = "../R_scripts",
 #   width = 10,
 #   height = 10)
 ```
