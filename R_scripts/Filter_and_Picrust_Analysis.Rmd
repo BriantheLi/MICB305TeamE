@@ -1,5 +1,5 @@
 ---
-title: "Filtering and picrust out"
+title: "Filtering and Analysis of Alcohol and IBD patients"
 output: html_document
 date: "2025-11-25"
 ---
@@ -31,7 +31,7 @@ library(dunn.test)
 library(pairwiseAdonis)
 ```
 
-
+# Metadata filtering
 ```{r filtering and saving new filtered datsets}
 # Alcohol dataset
 alc_original = read.delim("../Datasets/p8_metadata.txt",  header = TRUE)
@@ -102,221 +102,8 @@ write.table(
 )
 ```
 
-```{r pathways datasets loading}
-pathways_alcohol = read.delim("../Datasets/p8alcohol_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
-
-pathways_ibd = read.delim("../Datasets/ryan_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
-
-```
-
-```{r}
-# Alcohol
-alcohol_daa_results_df = pathway_daa(abundance = pathways_alcohol,
-                              metadata = alc_merged_data,
-                              group = "alcohol_intake_status",
-                              daa_method = "DESeq2",
-                              select = NULL, reference = NULL)
-
-alcohol_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
-                                               daa_results_df = alcohol_daa_results_df)
-
-# IBD
-
-# Merging IBD CD and UC Conditions
-picrust_ibd_merged_data = ryan_ibd_merged_data %>% 
-  mutate(Condition_merged = case_when(
-    str_detect(Condition, "Healthy") ~ "Healthy",
-    str_detect(Condition, "Crohn's Disease") ~ "IBD",
-    str_detect(Condition, "Ulcerative Colitis") ~ "IBD"
-  ))
-
-ibd_daa_results_df = pathway_daa(abundance = pathways_ibd,
-                              metadata = picrust_ibd_merged_data,
-                              group = "Condition_merged",
-                              daa_method = "DESeq2",
-                              select = NULL, reference = NULL)
-
-ibd_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
-                                               daa_results_df = ibd_daa_results_df)
-```
-
-```{r plotting}
-source('ggpicrust2_errorbar_function_fixed.R')
-
-
-alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
-
-# Explain this!
-# This makes sense, as there are no significant differences between different alcohol inflammatory environments' high level pathways 
-```
-
-```{r plotting}
-# Figure 3 Using the special dataset
-source('ggpicrust2_errorbar_function_fixed.R')
-
-ibd_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
-
-ibd_peb = pathway_errorbar_fixed(abundance = pathways_ibd, 
-                     daa_results_df = ibd_daa_annotated_results_df,
-                     Group = picrust_ibd_merged_data$Condition_merged,
-                     wrap_label = T, wraplength=60,
-                     fc_cutoff = 0.2, order_by_log = F,
-                     p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
-                     ko_to_kegg = FALSE, 
-                     p_value_bar = TRUE, 
-                     x_lab = "description")
-
-ibd_peb
-
-ggsave("PICRUStAnalysisIBD.png",
-       plot = ibd_peb, width = 18, height = 10)
-```
-
-```{r core microbiome}
-# Using the uncombined IBD dataset
-# Loading datasets
-alcohol_taxonomy = read.delim('../Datasets/p8alcohol_taxonomy.tsv', row.names = 1)
-alcohol_counts = read.delim('../Datasets/p8alcohol_feature-table.txt', skip=1, row.names=1)
-alc_metadata = read.delim("../Datasets/alc_merged_data.tsv", row.names = 1)
-
-ibd_taxonomy = read.delim('../Datasets/ryan_taxonomy.tsv', row.names = 1) 
-ibd_counts = read.delim('../Datasets/ryan_feature-table.txt', skip=1, row.names=1)
-ibd_metadata = read.delim("../Datasets/ryan_ibd_merged_data.tsv", row.names = 1)
-
-# Figure 2
-# Alcohol
-
-# counts datatset
-alcohol_counts = as.matrix(alcohol_counts)
-alc_counts = otu_table(alcohol_counts, taxa_are_rows = T)
-
-# metadata
-alc_sam_data = sample_data(alc_metadata)
-
-# taxanomy dataset
-alc_tax_wrangled = alcohol_taxonomy |>
-  separate(col = Taxon, 
-           into = c('Domain','Phylum','Class','Order',
-                    'Family','Genus','Species'),
-           sep=';', fill='right') |>
-           select(-Confidence) |>
-           as.matrix()
-alc_tax_wrangled = tax_table(alc_tax_wrangled)
-
-# combine
-alc_ps = phyloseq(alc_counts, alc_sam_data, alc_tax_wrangled)
-
-# print out the ps
-alc_ps
-
-
-# IBD
-
-# counts datatset
-ibd_counts = as.matrix(ibd_counts)
-ibd_counts = otu_table(ibd_counts, taxa_are_rows = T)
-
-# metadata
-ibd_sam_data = sample_data(ibd_metadata)
-
-# taxanomy dataset
-ibd_tax_wrangled = ibd_taxonomy |>
-  separate(col = Taxon, 
-           into = c('Domain','Phylum','Class','Order',
-                    'Family','Genus','Species'),
-           sep=';', fill='right') |>
-           select(-Confidence) |>
-           as.matrix()
-ibd_tax_wrangled = tax_table(ibd_tax_wrangled)
-
-# combine
-ibd_ps = phyloseq(ibd_counts, ibd_sam_data, ibd_tax_wrangled)
-
-# print out the ps
-ibd_ps
-
-# Core microbiome plots
-
-# Alcohol
-
-# Rarefy if desired and convert to relative abundance, use tax_glom (optional)
-alc_psrare = rarefy_even_depth(alc_ps, sample.size = 51, rngseed=123)
-alc_ps_rare_relab = transform(alc_psrare, 'compositional')
-alc_ps_rare_relab_genus = tax_glom(alc_ps_rare_relab, 'Genus')
-
-# Subset your phyloseq object
-low_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_status == 'Low')
-high_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_status == 'High')
-
-# Find core members
-ASVs_low_alcohol_intake = core_members(low_alcohol_intake, detection=0.001, prevalence = 0.1)
-ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, prevalence = 0.1)
-
-alcohol_venn_core_microbiome = ggVennDiagram(
-    list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
-    set_size = 5,
-    label_alpha = 1,        
-    label_color = "white",
-    label_size = 5,
-    category.names = c('low_alcohol','high_alcohol')) +
-    theme(plot.margin = margin(8, 40, 8, 40)) +
-    coord_cartesian(clip = "off") +
-    scale_fill_gradientn(colors = c(low = "#C4D8F3", high = "#FFCC9E"))
-alcohol_venn_core_microbiome
-
-# Need to save this in the Figures folder inside of the Results folder
-# alcohol_venn_core_microbiome = alcohol_venn_core_microbiome +
-#   theme(text = element_text(size = 18))
-# ggsave(
-#   filename = "figure_2_alcohol_venn_core_microbiome.jpeg",
-#   plot = alcohol_venn_core_microbiome,
-#   path = "../R_scripts",
-#   width = 10,
-#   height = 10)
-
-# IBD
-
-# Rarefy if desired and convert to relative abundance, use tax_glom (optional)
-ibd_psrare = rarefy_even_depth(ibd_ps, sample.size = 120, rngseed=123)
-ibd_ps_rare_relab = transform(ibd_psrare, 'compositional')
-ibd_ps_rare_relab_genus = tax_glom(ibd_ps_rare_relab, 'Genus')
-
-# Subset your phyloseq object
-healthy = subset_samples(ibd_ps_rare_relab_genus, Condition == 'Healthy')
-crohn_disease = subset_samples(ibd_ps_rare_relab_genus, Condition == "Crohn's Disease")
-ulcerative_colitis = subset_samples(ibd_ps_rare_relab_genus, Condition == "Ulcerative Colitis")
-
-# Find core members
-ASVs_healthy = core_members(healthy, detection=0.001, prevalence = 0.1)
-ASVs_crohn_disease = core_members(crohn_disease, detection=0.001, prevalence = 0.1)
-ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prevalence = 0.1)
-
-ibd_venn_core_microbiome = ggVennDiagram(
-    list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
-    set_size = 4,
-    category.names = c("Healthy", "CD", "UC"),
-    label_alpha = 1,        
-    label_color = "white",
-    label_size = 5) +
-  scale_fill_gradientn(colors = c("#99D48B", "#D19FC0"))
-ibd_venn_core_microbiome
-
-# Save this in the Figures folder inside of the Results folder
-# ibd_venn_core_microbiome <- ibd_venn_core_microbiome +
-#   theme(text = element_text(size = 20))
-# ggsave(
-#   filename = "figure_2_ibd_venn_core_microbiome.jpeg",
-#   plot = ibd_venn_core_microbiome,
-#   path = "../R_scripts",
-#   width = 10,
-#   height = 10)
-```
-
-```
-
-# R Load data
-
-```{r data}
+# Figure 1
+```{r data for figure 1 panel A-D}
 # data for both alcohol & IBD
 metadata_alcohol = read.delim("../Datasets/alc_merged_data.tsv", row.names = 1)
 taxonomy_alcohol = read.delim("../Datasets/p8alcohol_taxonomy.tsv", row.names = 1)
@@ -325,7 +112,6 @@ counts_alcohol = read.delim("../Datasets/p8alcohol_feature-table.txt", skip=1, r
 metadata_ibd = read.delim("../Datasets/ryan_ibd_merged_data.tsv", row.names = 1)
 taxonomy_ibd = read.delim("../Datasets/ryan_taxonomy.tsv", row.names = 1)
 counts_ibd = read.delim("../Datasets/ryan_feature-table.txt", skip = 1, row.names = 1)
-
 ```
 
 # Phyloseq obj for alpha diversity for alcohol
@@ -351,6 +137,7 @@ taxonomy_alcohol_data = tax_table(taxonomy_alcohol_data)
 ps_alcohol = phyloseq(alcohol_otu, metadata_alcohol_sample, taxonomy_alcohol_data)
 ps_alcohol
 ```
+
 # Alpha shannon diversity for alcohol vs non alcohol
 ## Panel A
 ```{r}
@@ -391,20 +178,29 @@ shannon_alcohol_plot <- pdata_alcohol |>
   scale_fill_manual(values = c("Low" = "#CC79A7",
                                "High" = "#A6CEE3")) +
   theme(legend.position = "none") +
-  labs(title = "Shannon Alpha Diversity between WT and Susceptible Groups",
-       x = "alcohol_intake_status",
+  labs(x = "alcohol_intake_status",
        y = "Shannon Diversity Index") +
   stat_compare_means(comparisons = list(c("Low", "High")),
                      method = "wilcox.test",
                      label = "p.format",
                      label.y = max(pdata_alcohol$value) + 0.2)
 shannon_alcohol_plot
+
+# Saving the plot
+ggsave(
+  filename = "Figure_1_Panel_A_alcohol_shannon.png",
+  plot = shannon_alcohol_plot,
+  path = "../Results/Figures",
+  width = 18,
+  height = 12)
 ```
+
 ```{r Statistical test}
 # Rerun statistical test for alcohol to make sure it is correctly plotted
 kruskal.test(value ~ alcohol_intake_status, data = pdata_alcohol)
 # p-value = 0.2248, which indicates non-significant difference between low and high alcohol intake groups
 ```
+
 
 # Phyloseq object for IBD
 ```{r}
@@ -429,6 +225,7 @@ taxonomy_ibd_data = tax_table(taxonomy_ibd_data)
 ps_ibd = phyloseq(ibd_otu, metadata_ibd_sample, taxonomy_ibd_data)
 ps_ibd
 ```
+
 # Alpha shannon diversity for IBD
 ## Panel B
 ```{r}
@@ -475,21 +272,30 @@ shannon_ibd_plot <- pdata_ibd |>
                                "Ulcerative Colitis" = "#A6CEE3",
                                "Healthy" = "#CAB2D6")) +
   theme(legend.position = "none") +
-  labs(title = "Shannon Alpha Diversity between UC, CD, and Healthy Groups",
-       x = "Condition",
+  labs(x = "Condition",
        y = "Shannon Diversity Index") +
   stat_compare_means(comparisons = comparisons,
                      method = "wilcox.test",
                      label = "p.format",
                      y.position = y_positions)
 shannon_ibd_plot
+
+# Saving the plot
+ggsave(
+  filename = "Figure_1_Panel_B_IBD_shannon.png",
+  plot = shannon_ibd_plot,
+  path = "../Results/Figures",
+  width = 18,
+  height = 12)
 ```
+
 ```{r Statistical test}
 # Kruskal-Wallis test
 kruskal.test(value ~ Condition, data = pdata_ibd)
 # At least 1 group is significantly different
 dunn.test(pdata_ibd$value, pdata_ibd$Condition, method = "BH")
 ```
+
 
 # Jaccard for alcohol
 ## Panel C
@@ -508,7 +314,7 @@ mds_data_alcohol = mds_alcohol$points %>%
   merge(sample_data(psrare_alcohol), by='row.names', sort=F)
 head(mds_data_alcohol)
 
-# Plot alcohol Jaccard diversity (Not Venn Diagram)
+# Plot alcohol Jaccard diversity
 alcohol_plot = mds_data_alcohol %>%
   ggplot(aes(MDS1,MDS2,color = alcohol_intake_status)) +
   geom_point(size = 3) +
@@ -516,30 +322,17 @@ alcohol_plot = mds_data_alcohol %>%
   theme_classic(base_size=18) +
   scale_colour_manual(values = c("Low" = "#A6CEE3",
                                  "High" = "#CAB2D6")) +
-  labs(title = "Jaccard Beta-Diversity between Alcohol Intake Groups",
-       colour = "Alcohol Intake Status")
+  labs(colour = "Alcohol Intake Status")
+
 alcohol_plot
 
-# Venn Diagram?
-# This is to separate OTUs of low and high alcohol intake
-# Extract sample names by group
-low_alcohol = sample_names(ps_alcohol)[sample_data(ps_alcohol)$alcohol_intake_status == "Low"]
-high_alcohol = sample_names(ps_alcohol)[sample_data(ps_alcohol)$alcohol_intake_status == "High"]
-
-# Get OTUs present in each group
-otu_low = unique(unlist(taxa_names(prune_samples(low_alcohol, ps_alcohol))))
-otu_high = unique(unlist(taxa_names(prune_samples(high_alcohol, ps_alcohol))))
-
-# Create list
-otu_list <- list(Low = otu_low, High = otu_high)
-
-# Draw Venn Diagram using ggplot
-venn_diagram = ggVennDiagram(otu_list,
-                             label_alpha = 0,
-                             set_size = 5) +
-  scale_fill_gradient(low = "#A6CEE3", high = "#CAB2D6") + 
-  labs(title = "Venn Diagram")
-venn_diagram
+# Saving the plot
+ggsave(
+  filename = "Figure_1_Panel_C_alcohol_Jaccard.png",
+  plot = alcohol_plot,
+  path = "../Results/Figures",
+  width = 18,
+  height = 12)
 ```
 
 ```{r Statistical Test}
@@ -576,10 +369,19 @@ ibd_plot = mds_data_ibd %>%
   scale_colour_manual(values = c("Ulcerative Colitis" = "#A6CEE3",
                                  "Crohn's Disease" = "#CAB2D6",
                                  "Healthy" = "#CC79A7")) +
-  labs(title = "Jaccard Beta-Diversity between Healthy and IBD Patients",
-       colour = "Condition")
+  labs(colour = "Condition")
+
 ibd_plot
+
+# Saving the plot
+ggsave(
+  filename = "Figure_1_Panel_D_ibd_Jaccard.png",
+  plot = ibd_plot,
+  path = "../Results/Figures",
+  width = 18,
+  height = 12)
 ```
+
 ```{r Statistical Test}
 adonis2(ps_jaccard_ibd ~ Condition, data = pdata_ibd)
 # Overall p-value between 3 groups is 0.001, which indicates significant difference between all 3 groups
@@ -592,4 +394,224 @@ pairwise.adonis(ps_jaccard_ibd, factors = pdata_ibd$Condition,
 # Ulcerative Colitis vs Healthy: 0.0015 (significant difference)
 # Crohn's Disease vs Healthy: 0.0015 (significant difference)
 ```
-# VICTORY!!
+
+
+# Figure 2 Panel A and B - core microbiome
+```{r Preparing data for core microbiome}
+# Using the uncombined IBD dataset
+# Loading datasets
+alcohol_taxonomy = read.delim('../Datasets/p8alcohol_taxonomy.tsv', row.names = 1)
+alcohol_counts = read.delim('../Datasets/p8alcohol_feature-table.txt', skip=1, row.names=1)
+alc_metadata = read.delim("../Datasets/alc_merged_data.tsv", row.names = 1)
+
+ibd_taxonomy = read.delim('../Datasets/ryan_taxonomy.tsv', row.names = 1) 
+ibd_counts = read.delim('../Datasets/ryan_feature-table.txt', skip=1, row.names=1)
+ibd_metadata = read.delim("../Datasets/ryan_ibd_merged_data.tsv", row.names = 1)
+```
+
+# Making phyloseq object for core microbiome
+```{r}
+# Making alcohol phyloseq objects
+
+# alcohol counts datatset
+alcohol_counts = as.matrix(alcohol_counts)
+alc_counts = otu_table(alcohol_counts, taxa_are_rows = T)
+
+# metadata
+alc_sam_data = sample_data(alc_metadata)
+
+# taxanomy dataset
+alc_tax_wrangled = alcohol_taxonomy |>
+  separate(col = Taxon, 
+           into = c('Domain','Phylum','Class','Order',
+                    'Family','Genus','Species'),
+           sep=';', fill='right') |>
+           select(-Confidence) |>
+           as.matrix()
+alc_tax_wrangled = tax_table(alc_tax_wrangled)
+
+# combine
+alc_ps = phyloseq(alc_counts, alc_sam_data, alc_tax_wrangled)
+
+# print out the ps
+alc_ps
+
+# IBD
+# IBD counts datatset
+ibd_counts = as.matrix(ibd_counts)
+ibd_counts = otu_table(ibd_counts, taxa_are_rows = T)
+
+# metadata
+ibd_sam_data = sample_data(ibd_metadata)
+
+# taxanomy dataset
+ibd_tax_wrangled = ibd_taxonomy |>
+  separate(col = Taxon, 
+           into = c('Domain','Phylum','Class','Order',
+                    'Family','Genus','Species'),
+           sep=';', fill='right') |>
+           select(-Confidence) |>
+           as.matrix()
+ibd_tax_wrangled = tax_table(ibd_tax_wrangled)
+
+# combine
+ibd_ps = phyloseq(ibd_counts, ibd_sam_data, ibd_tax_wrangled)
+
+# print out the ps
+ibd_ps
+```
+
+# Plotting the microbime venn diagram
+## Alcohol microbiome - Panel A
+```{r}
+# Rarefy if desired and convert to relative abundance
+alc_psrare = rarefy_even_depth(alc_ps, sample.size = 51, rngseed=123)
+alc_ps_rare_relab = transform(alc_psrare, 'compositional')
+alc_ps_rare_relab_genus = tax_glom(alc_ps_rare_relab, 'Genus')
+
+# Subset your phyloseq object
+low_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_status == 'Low')
+high_alcohol_intake = subset_samples(alc_ps_rare_relab_genus, alcohol_intake_status == 'High')
+
+# Find core members
+ASVs_low_alcohol_intake = core_members(low_alcohol_intake, detection=0.001, prevalence = 0.1)
+ASVs_high_alcohol_intake = core_members(high_alcohol_intake, detection=0.001, prevalence = 0.1)
+
+alcohol_venn_core_microbiome = ggVennDiagram(
+    list(ASVs_low_alcohol_intake, ASVs_high_alcohol_intake),
+    set_size = 5,
+    label_alpha = 1,        
+    label_color = "white",
+    label_size = 5,
+    category.names = c('low_alcohol','high_alcohol')) +
+    theme(plot.margin = margin(8, 40, 8, 40)) +
+    coord_cartesian(clip = "off") +
+    scale_fill_gradientn(colors = c(low = "#C4D8F3", high = "#FFCC9E"))
+alcohol_venn_core_microbiome
+
+# Saving the plot
+alcohol_venn_core_microbiome = alcohol_venn_core_microbiome +
+  theme(text = element_text(size = 18))
+ggsave(
+  filename = "Figure_2_Panel_A_alcohol_venn_core_microbiome.png",
+  plot = alcohol_venn_core_microbiome,
+  path = "../Results/Figures",
+  width = 10,
+  height = 10,
+  bg = "white")
+```
+
+## IBD microbiome - Panel B
+```{r}
+# Rarefy if desired and convert to relative abundance, use tax_glom (optional)
+ibd_psrare = rarefy_even_depth(ibd_ps, sample.size = 120, rngseed=123)
+ibd_ps_rare_relab = transform(ibd_psrare, 'compositional')
+ibd_ps_rare_relab_genus = tax_glom(ibd_ps_rare_relab, 'Genus')
+
+# Subset your phyloseq object
+healthy = subset_samples(ibd_ps_rare_relab_genus, Condition == 'Healthy')
+crohn_disease = subset_samples(ibd_ps_rare_relab_genus, Condition == "Crohn's Disease")
+ulcerative_colitis = subset_samples(ibd_ps_rare_relab_genus, Condition == "Ulcerative Colitis")
+
+# Find core members
+ASVs_healthy = core_members(healthy, detection=0.001, prevalence = 0.1)
+ASVs_crohn_disease = core_members(crohn_disease, detection=0.001, prevalence = 0.1)
+ASVs_ulcerative_colitis = core_members(ulcerative_colitis, detection=0.001, prevalence = 0.1)
+
+ibd_venn_core_microbiome = ggVennDiagram(
+    list(ASVs_healthy, ASVs_crohn_disease, ASVs_ulcerative_colitis),
+    set_size = 4,
+    category.names = c("Healthy", "CD", "UC"),
+    label_alpha = 1,        
+    label_color = "white",
+    label_size = 5) +
+  scale_fill_gradientn(colors = c("#99D48B", "#D19FC0"))
+ibd_venn_core_microbiome
+
+# Saving the plot
+ibd_venn_core_microbiome <- ibd_venn_core_microbiome +
+  theme(text = element_text(size = 20))
+ggsave(
+  filename = "Figure_2_Panel_B_ibd_venn_core_microbiome.png",
+  plot = ibd_venn_core_microbiome,
+  path = "../Results/Figures",
+  width = 10,
+  height = 10,
+  bg = "white")
+```
+
+# Data loading for picrust
+```{r pathways datasets loading}
+pathways_alcohol = read.delim("../Datasets/p8alcohol_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
+
+pathways_ibd = read.delim("../Datasets/ryan_path_abun_unstrat.tsv", row.name = 1) # reading in the tsv with rownames as the first column
+
+```
+
+# Differential pathway analysis
+```{r Differential pathway analysis for alcohol intake and IBD}
+# Alcohol
+alcohol_daa_results_df = pathway_daa(abundance = pathways_alcohol,
+                              metadata = alc_merged_data,
+                              group = "alcohol_intake_status",
+                              daa_method = "DESeq2",
+                              select = NULL, reference = NULL)
+
+alcohol_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
+                                               daa_results_df = alcohol_daa_results_df)
+
+# IBD
+
+# Merging IBD CD and UC Conditions
+picrust_ibd_merged_data = ryan_ibd_merged_data %>% 
+  mutate(Condition_merged = case_when(
+    str_detect(Condition, "Healthy") ~ "Healthy",
+    str_detect(Condition, "Crohn's Disease") ~ "IBD",
+    str_detect(Condition, "Ulcerative Colitis") ~ "IBD"
+  ))
+
+ibd_daa_results_df = pathway_daa(abundance = pathways_ibd,
+                              metadata = picrust_ibd_merged_data,
+                              group = "Condition_merged",
+                              daa_method = "DESeq2",
+                              select = NULL, reference = NULL)
+
+ibd_daa_annotated_results_df = pathway_annotation(pathway = "MetaCyc",
+                                               daa_results_df = ibd_daa_results_df)
+```
+
+# Alcohol picrust plot
+```{r}
+source('ggpicrust2_errorbar_function_fixed.R')
+
+
+alcohol_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
+
+# As there are no significant differences between different alcohol inflammatory environments' high level pathways, there would not be
+# any plot for the picrust of alcohol
+```
+
+# IBD picrust plot
+```{r plotting}
+# Figure 3 Using the special dataset
+source('ggpicrust2_errorbar_function_fixed.R')
+
+ibd_daa_annotated_results_df %>% filter(p_adjust < 0.05) %>% nrow()
+
+ibd_peb = pathway_errorbar_fixed(abundance = pathways_ibd, 
+                     daa_results_df = ibd_daa_annotated_results_df,
+                     Group = picrust_ibd_merged_data$Condition_merged,
+                     wrap_label = T, wraplength=60,
+                     fc_cutoff = 0.2, order_by_log = F,
+                     p_values_threshold = 0.05, # Changed the p value threshold to include at least 2 results
+                     ko_to_kegg = FALSE, 
+                     p_value_bar = TRUE, 
+                     x_lab = "description")
+
+ibd_peb
+
+# Saving the plot
+ggsave("PICRUStAnalysisIBD.png",
+       plot = ibd_peb, width = 18, height = 10,
+       path = "../Results/Figures")
+```
