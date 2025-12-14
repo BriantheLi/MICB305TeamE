@@ -114,7 +114,7 @@ taxonomy_ibd = read.delim("../Datasets/ryan_taxonomy.tsv", row.names = 1)
 counts_ibd = read.delim("../Datasets/ryan_feature-table.txt", skip = 1, row.names = 1)
 ```
 
-# Phyloseq obj for alpha diversity for alcohol
+# Phyloseq obj for alpha diversity for alcohol dataset
 ```{r alcohol vs non alcohol}
 # counts
 counts_alcohol = as.matrix(counts_alcohol)
@@ -138,18 +138,16 @@ ps_alcohol = phyloseq(alcohol_otu, metadata_alcohol_sample, taxonomy_alcohol_dat
 ps_alcohol
 ```
 
-# Alpha shannon diversity for alcohol vs non alcohol
+# Alpha shannon diversity for high vs low alcohol consumption
 ## Panel A
 ```{r}
-# ps = readRDS('C:/MICB_305/Do_Thea_Assignment5/phyloseq_taxonomy.rds')
 # Histogram is for the overview of ps_alcohol
 hist(sample_sums(ps_alcohol))
-# This is similar to what we have seen in qiime, it's just that it's clearer
+
 rarecurve(t(data.frame(ps_alcohol@otu_table)),
           step=500,
           label = FALSE)
-# Sampling depth is sample.size
-# rngseed is random seed (set.seed)
+
 psrare_alcohol = ps_alcohol |>
   rarefy_even_depth(sample.size = 9000, rngseed=123)
 
@@ -165,6 +163,7 @@ plot_alcohol = plot_richness(psrare_alcohol, x = "alcohol_intake_status",
                      color = "alcohol_intake_status",
                      )
 plot_alcohol
+
 # Now make a publication-ready plot
 pdata_alcohol = plot_alcohol$data
 str(pdata_alcohol)
@@ -178,7 +177,7 @@ shannon_alcohol_plot <- pdata_alcohol |>
   scale_fill_manual(values = c("Low" = "#CC79A7",
                                "High" = "#A6CEE3")) +
   theme(legend.position = "none") +
-  labs(x = "alcohol_intake_status",
+  labs(x = "Alcohol Consumption",
        y = "Shannon Diversity Index") +
   stat_compare_means(comparisons = list(c("Low", "High")),
                      method = "wilcox.test",
@@ -195,7 +194,7 @@ ggsave(
   height = 12)
 ```
 
-```{r Statistical test}
+```{r Statistical test for alpha shannon diversity for alcohol dataset}
 # Rerun statistical test for alcohol to make sure it is correctly plotted
 kruskal.test(value ~ alcohol_intake_status, data = pdata_alcohol)
 # p-value = 0.2248, which indicates non-significant difference between low and high alcohol intake groups
@@ -203,7 +202,7 @@ kruskal.test(value ~ alcohol_intake_status, data = pdata_alcohol)
 
 
 # Phyloseq object for IBD
-```{r}
+```{r Preparing the phyloseq object}
 # counts
 counts_ibd = as.matrix(counts_ibd)
 ibd_otu = otu_table(counts_ibd, taxa_are_rows = T)
@@ -289,7 +288,7 @@ ggsave(
   height = 12)
 ```
 
-```{r Statistical test}
+```{r Statistical test for alpha shannon diversity for IBD}
 # Kruskal-Wallis test
 kruskal.test(value ~ Condition, data = pdata_ibd)
 # At least 1 group is significantly different
@@ -297,7 +296,7 @@ dunn.test(pdata_ibd$value, pdata_ibd$Condition, method = "BH")
 ```
 
 
-# Jaccard for alcohol
+# Jaccard for high vs low alcohol consumption
 ## Panel C
 ```{r}
 # Jaccard considers richness only (no evenness or phylogenetic distances)
@@ -322,7 +321,7 @@ alcohol_plot = mds_data_alcohol %>%
   theme_classic(base_size=18) +
   scale_colour_manual(values = c("Low" = "#A6CEE3",
                                  "High" = "#CAB2D6")) +
-  labs(colour = "Alcohol Intake Status")
+  labs(colour = "Alcohol Consumption")
 
 alcohol_plot
 
@@ -335,7 +334,7 @@ ggsave(
   height = 12)
 ```
 
-```{r Statistical Test}
+```{r Statistical test for jaccard: high vs low alcohol consumption}
 all(rownames(pdata_alcohol) == rownames(as.matrix(ps_jaccard_alcohol)))
 pdata_alcohol_clean = select(pdata_alcohol, -se)
 
@@ -382,7 +381,7 @@ ggsave(
   height = 12)
 ```
 
-```{r Statistical Test}
+```{r Statistical test for jaccard: IBD}
 adonis2(ps_jaccard_ibd ~ Condition, data = pdata_ibd)
 # Overall p-value between 3 groups is 0.001, which indicates significant difference between all 3 groups
 
@@ -483,7 +482,7 @@ alcohol_venn_core_microbiome = ggVennDiagram(
     label_alpha = 1,        
     label_color = "white",
     label_size = 5,
-    category.names = c('low_alcohol','high_alcohol')) +
+    category.names = c('Low alcohol intake','High alcohol intake')) +
     theme(plot.margin = margin(8, 40, 8, 40)) +
     coord_cartesian(clip = "off") +
     scale_fill_gradientn(colors = c(low = "#C4D8F3", high = "#FFCC9E"))
@@ -496,8 +495,8 @@ ggsave(
   filename = "Figure_2_Panel_A_alcohol_venn_core_microbiome.png",
   plot = alcohol_venn_core_microbiome,
   path = "../Results/Figures",
-  width = 10,
-  height = 10,
+  width = 16,
+  height = 12,
   bg = "white")
 ```
 
@@ -525,17 +524,17 @@ ibd_venn_core_microbiome = ggVennDiagram(
     label_alpha = 1,        
     label_color = "white",
     label_size = 5) +
-  scale_fill_gradientn(colors = c("#99D48B", "#D19FC0"))
+  scale_fill_gradientn(colors = c("#CC79A7", "#C4D8F3"))
 ibd_venn_core_microbiome
 
 # Saving the plot
 ibd_venn_core_microbiome <- ibd_venn_core_microbiome +
-  theme(text = element_text(size = 20))
+  theme(text = element_text(size = 22))
 ggsave(
   filename = "Figure_2_Panel_B_ibd_venn_core_microbiome.png",
   plot = ibd_venn_core_microbiome,
   path = "../Results/Figures",
-  width = 10,
+  width = 16,
   height = 10,
   bg = "white")
 ```
