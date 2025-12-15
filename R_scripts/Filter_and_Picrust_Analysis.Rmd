@@ -42,10 +42,6 @@ alc_no_species$alcohol_intake_status = ifelse(
     (alc_no_species$host_sex == "male" & alc_no_species$GramPerday >= 45),
   "High", "Low")
 
-alc_no_species$age_group = ifelse(
-  alc_no_species$Host_age >= 60, "Senior",
-  ifelse(alc_no_species$Host_age >= 20 & alc_no_species$Host_age < 60, "Adult", "Child")
-)
 alc_grouped = alc_no_species
 alc_removed_row_5 = alc_grouped[-5, ]
 alc_removed_row_5$GramPerday = as.numeric(alc_removed_row_5$GramPerday)
@@ -388,7 +384,8 @@ adonis2(ps_jaccard_ibd ~ Condition, data = pdata_ibd)
 
 # Now doing pairwise PERMANOVA to see if there is significant difference between conditions
 pairwise.adonis(ps_jaccard_ibd, factors = pdata_ibd$Condition, 
-                sim.method = "jaccard", p.adjust.m = "BH") # in dunn.test I used BH for method so maybe I should use it consistently?
+                sim.method = "jaccard", p.adjust.m = "BH") 
+
 # Look at p.adjusted for p-values between different conditions
 # Ulcerative Colitis vs Crohn's Disease: p-value = 0.0020 (significant difference)
 # Ulcerative Colitis vs Healthy: 0.0015 (significant difference)

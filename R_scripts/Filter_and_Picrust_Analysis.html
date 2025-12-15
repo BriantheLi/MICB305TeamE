@@ -607,10 +607,6 @@ alc_no_species$alcohol_intake_status = ifelse(
     (alc_no_species$host_sex == &quot;male&quot; &amp; alc_no_species$GramPerday &gt;= 45),
   &quot;High&quot;, &quot;Low&quot;)
 
-alc_no_species$age_group = ifelse(
-  alc_no_species$Host_age &gt;= 60, &quot;Senior&quot;,
-  ifelse(alc_no_species$Host_age &gt;= 20 &amp; alc_no_species$Host_age &lt; 60, &quot;Adult&quot;, &quot;Child&quot;)
-)
 alc_grouped = alc_no_species
 alc_removed_row_5 = alc_grouped[-5, ]
 alc_removed_row_5$GramPerday = as.numeric(alc_removed_row_5$GramPerday)
@@ -702,7 +698,7 @@ ps_alcohol = phyloseq(alcohol_otu, metadata_alcohol_sample, taxonomy_alcohol_dat
 ps_alcohol</code></pre>
 <pre><code>## phyloseq-class experiment-level object
 ## otu_table()   OTU Table:         [ 10174 taxa and 51 samples ]
-## sample_data() Sample Data:       [ 51 samples by 9 sample variables ]
+## sample_data() Sample Data:       [ 51 samples by 8 sample variables ]
 ## tax_table()   Taxonomy Table:    [ 10174 taxa by 7 taxonomic ranks ]</code></pre>
 </div>
 <div id="alpha-shannon-diversity-for-high-vs-low-alcohol-consumption" class="section level1">
@@ -750,14 +746,13 @@ plot_alcohol</code></pre>
 <pre class="r"><code># Now make a publication-ready plot
 pdata_alcohol = plot_alcohol$data
 str(pdata_alcohol)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    51 obs. of  13 variables:
+<pre><code>## &#39;data.frame&#39;:    51 obs. of  12 variables:
 ##  $ geo_loc_name             : chr  &quot;Norway&quot; &quot;Norway&quot; &quot;Norway&quot; &quot;Norway&quot; ...
 ##  $ GramPerday               : num  3.2 0 17 137 66 1.2 0 0.6 10.1 8.1 ...
 ##  $ Host_age                 : int  50 55 49 59 64 69 66 54 75 71 ...
 ##  $ host_sex                 : chr  &quot;male&quot; &quot;male&quot; &quot;female&quot; &quot;male&quot; ...
 ##  $ Sample.Name              : chr  &quot;K15&quot; &quot;K14&quot; &quot;F52&quot; &quot;F50&quot; ...
 ##  $ alcohol_intake_status    : chr  &quot;Low&quot; &quot;Low&quot; &quot;Low&quot; &quot;Low&quot; ...
-##  $ age_group                : chr  &quot;Adult&quot; &quot;Adult&quot; &quot;Adult&quot; &quot;Adult&quot; ...
 ##  $ forward.absolute.filepath: chr  &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488421_1.fastq.gz&quot; &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488422_1.fastq.gz&quot; &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488423_1.fastq.gz&quot; &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488424_1.fastq.gz&quot; ...
 ##  $ reverse.absolute.filepath: chr  &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488421_2.fastq.gz&quot; &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488422_2.fastq.gz&quot; &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488423_2.fastq.gz&quot; &quot;/datasets/project_2/alcohol/p8_seqs/SRR8488424_2.fastq.gz&quot; ...
 ##  $ samples                  : chr  &quot;SRR8488421&quot; &quot;SRR8488422&quot; &quot;SRR8488423&quot; &quot;SRR8488424&quot; ...
@@ -1024,13 +1019,13 @@ head(mds_data_alcohol)</code></pre>
 ## 4 SRR8488424 -0.304867557  0.174296923       Norway      137.0       59
 ## 5 SRR8488426 -0.411459413 -0.117802744       Norway       66.0       64
 ## 6 SRR8488427 -0.115487613 -0.002704058       Norway        1.2       69
-##   host_sex Sample.Name alcohol_intake_status age_group
-## 1     male         K15                   Low     Adult
-## 2     male         K14                   Low     Adult
-## 3   female         F52                   Low     Adult
-## 4     male         F50                   Low     Adult
-## 5     male         F53                  High    Senior
-## 6     male         K06                   Low    Senior
+##   host_sex Sample.Name alcohol_intake_status
+## 1     male         K15                   Low
+## 2     male         K14                   Low
+## 3   female         F52                   Low
+## 4     male         F50                   Low
+## 5     male         F53                  High
+## 6     male         K06                   Low
 ##                                   forward.absolute.filepath
 ## 1 /datasets/project_2/alcohol/p8_seqs/SRR8488421_1.fastq.gz
 ## 2 /datasets/project_2/alcohol/p8_seqs/SRR8488422_1.fastq.gz
@@ -1201,7 +1196,7 @@ ggsave(
 
 # Now doing pairwise PERMANOVA to see if there is significant difference between conditions
 pairwise.adonis(ps_jaccard_ibd, factors = pdata_ibd$Condition, 
-                sim.method = &quot;jaccard&quot;, p.adjust.m = &quot;BH&quot;) # in dunn.test I used BH for method so maybe I should use it consistently?</code></pre>
+                sim.method = &quot;jaccard&quot;, p.adjust.m = &quot;BH&quot;) </code></pre>
 <pre><code>##                                   pairs Df SumsOfSqs  F.Model         R2
 ## 1 Ulcerative Colitis vs Crohn&#39;s Disease  1 0.6382124 1.690396 0.02654083
 ## 2         Ulcerative Colitis vs Healthy  1 0.7548511 2.213984 0.02726112
@@ -1256,7 +1251,7 @@ alc_ps = phyloseq(alc_counts, alc_sam_data, alc_tax_wrangled)
 alc_ps</code></pre>
 <pre><code>## phyloseq-class experiment-level object
 ## otu_table()   OTU Table:         [ 10174 taxa and 51 samples ]
-## sample_data() Sample Data:       [ 51 samples by 9 sample variables ]
+## sample_data() Sample Data:       [ 51 samples by 8 sample variables ]
 ## tax_table()   Taxonomy Table:    [ 10174 taxa by 7 taxonomic ranks ]</code></pre>
 <pre class="r"><code># IBD
 # IBD counts datatset
