@@ -24,7 +24,6 @@ library(phyloseq)
 library(microbiome)
 library(ggVennDiagram)
 library(vegan)
-library(indicspecies)
 library(writexl)
 library(ggpubr) # load packages for stat_compare_means
 library(dunn.test)
